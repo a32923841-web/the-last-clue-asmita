@@ -2,27 +2,42 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
   <meta name="theme-color" content="#111827">
-  <meta name="description" content="An offline, illustrated 2D mystery adventure made for Asmita, by Abhay.">
-  <title>The Last Clue — A 2D Story for Asmita</title>
+  <meta name="description" content="An offline 2D adventure mystery starring Asmita and Abhay.">
+  <title>The Last Clue — A 2D Adventure</title>
   <link rel="manifest" href="manifest.json">
   <link rel="icon" href="assets/icon.svg" type="image/svg+xml">
-  <link rel="stylesheet" href="style.css?v=17">
+  <link rel="stylesheet" href="style.css?v=19">
 </head>
 <body>
   <main class="shell">
-    <header class="topbar"><div class="brand"><span class="brand-mark">✦</span><span>THE LAST CLUE</span></div><div class="tools"><button id="musicBtn" class="tiny-btn" aria-label="Toggle music">♫ <span>Music</span></button><button id="soundBtn" class="tiny-btn" aria-label="Toggle sound">◖ <span>Sound</span></button><button id="pauseBtn" class="tiny-btn" aria-label="Open menu">Ⅱ <span>Menu</span></button></div></header>
-    <section class="game-wrap" aria-label="Game screen">
-      <canvas id="game" width="960" height="540" aria-label="2D adventure game scene"></canvas>
-      <div class="hud"><div class="chapter-pill" id="chapter">PROLOGUE</div><button id="notebookBtn" class="hud-btn">▤ <span>Notebook</span></button><button id="inventoryBtn" class="hud-btn">◇ <span>Inventory</span><b id="itemCount">0</b></button><div class="progress"><span id="progressText">0% INVESTIGATED</span><i><b id="progressBar"></b></i></div></div>
-      <div id="overlay" class="overlay"><div id="overlayCard" class="card"></div></div>
-      <div id="toast" class="toast"></div>
-      <div id="dialogue" class="dialogue hidden"><div id="portrait" class="portrait" aria-hidden="true"></div><div class="dialogue-copy"><div class="speaker" id="speaker"></div><div id="line" class="line"></div><div class="dialogue-hint">SPACE / ENTER TO CONTINUE <span>▼</span></div></div></div>
-      <div class="touch-controls"><div class="dpad"><button data-dir="up">▲</button><div><button data-dir="left">◀</button><button data-dir="down">▼</button><button data-dir="right">▶</button></div></div><button id="touchInteract" class="interact-btn">INVESTIGATE</button></div>
+    <header class="topbar">
+      <div class="brand"><span class="brand-mark">✦</span><span>THE LAST CLUE</span><span class="brand-sub">A 2D ADVENTURE</span></div>
+      <div class="tools"><button id="musicBtn" class="tiny-btn" aria-label="Toggle music">♫ <span>Music</span></button><button id="soundBtn" class="tiny-btn" aria-label="Toggle sound">◖ <span>Sound</span></button><button id="pauseBtn" class="tiny-btn" aria-label="Open menu">Ⅱ <span>Menu</span></button></div>
+    </header>
+    <section class="game-wrap" aria-label="Adventure game">
+      <canvas id="game" width="960" height="540" aria-label="Side-scrolling 2D adventure"></canvas>
+      <div class="hud">
+        <div class="chapter-pill" id="chapter">MOONLIT TOWN</div>
+        <div class="quest-chip" id="questChip">Find the letter by the streetlamp</div>
+        <button id="notebookBtn" class="hud-btn" aria-label="Open detective notebook">▤ <span>Notebook</span><b id="clueCount">0/4</b></button>
+        <div class="hearts" id="hearts" aria-label="Health">♥ ♥ ♥</div>
+      </div>
+      <div id="toast" class="toast" role="status"></div>
+      <div id="dialogue" class="dialogue hidden" role="dialog" aria-live="polite">
+        <div class="portrait" id="portrait"></div>
+        <div class="dialogue-copy"><div class="speaker" id="speaker"></div><div class="line" id="line"></div><div class="dialogue-hint">SPACE / ENTER <span>·</span> TAP TO CONTINUE</div></div>
+        <button class="dialogue-next" id="dialogueNext" aria-label="Continue dialogue">›</button>
+      </div>
+      <div id="overlay" class="overlay closed"><section id="overlayCard" class="card" role="dialog" aria-modal="true"></section></div>
+      <div class="touch-controls" aria-label="Touch controls">
+        <div class="move-pad"><button data-hold="left" aria-label="Move left">◀</button><button data-hold="right" aria-label="Move right">▶</button></div>
+        <div class="action-pad"><button data-action="jump" aria-label="Jump">JUMP</button><button data-action="attack" aria-label="Attack or counter">ACT</button><button data-action="interact" aria-label="Interact">TALK</button></div>
+      </div>
     </section>
-    <footer><span>WASD / ARROWS TO MOVE · SPACE / CLICK TO INVESTIGATE</span><span id="saveStatus">AUTO-SAVED</span></footer>
+    <footer><span>MOVE A / D · JUMP / DODGE SPACE · INTERACT E · STRIKE J</span><span id="saveStatus">AUTO-SAVED</span></footer>
   </main>
-  <script src="script.js?v=17"></script>
+  <script src="script.js?v=19"></script>
 </body>
 </html>

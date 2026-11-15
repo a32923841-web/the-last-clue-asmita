@@ -12,8 +12,10 @@ A hosted first visit needs an internet connection so the browser can download th
 
 ## Controls
 
-- Move with WASD or arrow keys. Use the on-screen D-pad on phones.
-- Press Space, Enter, or Investigate near a clue.
+- Move with WASD or arrow keys. Hold Shift to run. Use the on-screen D-pad on phones.
+- Press Space or Up to jump and dodge; press E or Enter near a clue or character.
+- Press J or the on-screen ACT button during the rooftop spar to strike. Jump over the keeper’s wind-up swing.
+- Space or Enter advances dialogue; tap the dialogue panel or arrow to continue.
 - Click or tap scene objects to investigate them.
 - Use Notebook and Inventory to revisit evidence.
 - Escape or Menu opens continue, notes, and restart options.
@@ -23,9 +25,9 @@ Progress saves in local storage on the current device and browser. The title scr
 
 ## The adventure
 
-Explore the moonlit town, a furnished old library with walking and chatting patrons, the park, the station, and the rooftops. Solve five distinct challenges: repeat a streetlamp signal, assemble a torn library message, catch a quick bird, route a train across the signal board, and align a three-symbol lock. Finding all four evidence clues opens a glowing portal that leads into the cave finale.
+Run, jump, and explore a continuous side-scrolling route through the moonlit town, a furnished old library with walking and chatting patrons, the park, the station, and the rooftops. Solve the streetlamp signal, rebuild a library cipher, reach the raised photo trail, route a train, win a live rooftop spar, and open the safe. Finding all four evidence clues opens a glowing portal into the cave finale.
 
-In the cave, Asmita follows the winding crystal-lit passage to Abhay waiting in silhouette against the sunset. After the letter, they take hands and walk together to a safe inset overlook, then sit side by side while the sunset plays. Asmita’s dark hair, checked detective hat, bright glasses, notebook, and magnifying glass are kept consistent across her smooth animated character and dialogue portrait.
+In the cave, a slow camera move reveals Abhay waiting just inside the exit, silhouetted against a sunset framed by the cave mouth. After the letter, he takes Asmita’s hand and they walk together to a safe inset overlook, then sit side by side while the sunset plays. Asmita’s dark hair, detective hat, clearly visible glasses, notebook, and magnifying glass stay consistent in the game and dialogue portrait.
 
 ## Project files
 

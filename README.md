@@ -30,4 +30,4 @@ Progress is saved in local storage on the current device/browser. Restart clears
 
 ## Scenes and story
 
-Explore the moonlit town, old library, quiet park, old station, and rooftop to collect the four clues. Solve the final evidence puzzle, then enter the cave that opens onto the sunset cliff. The complete letter, reveal dialogue, friendship ending, notebook, inventory, save/continue, and replay are included.
+Explore the moonlit town, a fully furnished old library with browsing and chatting patrons, the quiet park, old station, and rooftop. Solve five short mini-games (lantern sequence, library book order, park memory trail, station signals, and rooftop lock) to earn clues. Chapter transitions use cinematic story beats and moving scene details. Then follow the winding cave passage to Abhay waiting in silhouette at the sunset opening. After the letter, take his hand and walk together to a safe inset overlook, then sit side by side as the sunset plays. Asmita's detective hat, dark hair, notebook, magnifying glass, and clearly visible spectacles stay consistent in her world sprite and dialogue portrait.

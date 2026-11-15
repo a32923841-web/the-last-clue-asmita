@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+  <meta name="theme-color" content="#111827">
+  <meta name="description" content="A pixel-art mystery made for Asmita, by Abhay.">
+  <title>The Last Clue — A Pixel Story for Asmita</title>
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" href="assets/icon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <main class="shell">
+    <header class="topbar"><div class="brand"><span class="brand-mark">✦</span><span>THE LAST CLUE</span></div><div class="tools"><button id="musicBtn" class="tiny-btn" aria-label="Toggle music">♫ <span>Music</span></button><button id="soundBtn" class="tiny-btn" aria-label="Toggle sound">◖ <span>Sound</span></button><button id="pauseBtn" class="tiny-btn" aria-label="Open menu">Ⅱ <span>Menu</span></button></div></header>
+    <section class="game-wrap" aria-label="Game screen">
+      <canvas id="game" width="960" height="540" aria-label="Pixel art game scene"></canvas>
+      <div class="hud"><div class="chapter-pill" id="chapter">PROLOGUE</div><button id="notebookBtn" class="hud-btn">▤ <span>Notebook</span></button><button id="inventoryBtn" class="hud-btn">◇ <span>Inventory</span><b id="itemCount">0</b></button><div class="progress"><span id="progressText">0% INVESTIGATED</span><i><b id="progressBar"></b></i></div></div>
+      <div id="overlay" class="overlay"><div id="overlayCard" class="card"></div></div>
+      <div id="toast" class="toast"></div>
+      <div id="dialogue" class="dialogue hidden"><div class="speaker" id="speaker"></div><div id="line" class="line"></div><div class="dialogue-hint">SPACE / ENTER TO CONTINUE <span>▼</span></div></div>
+      <div class="touch-controls"><div class="dpad"><button data-dir="up">▲</button><div><button data-dir="left">◀</button><button data-dir="down">▼</button><button data-dir="right">▶</button></div></div><button id="touchInteract" class="interact-btn">INVESTIGATE</button></div>
+    </section>
+    <footer><span>WASD / ARROWS TO MOVE · SPACE / CLICK TO INVESTIGATE</span><span id="saveStatus">AUTO-SAVED</span></footer>
+  </main>
+  <script src="script.js"></script>
+</body>
+</html>

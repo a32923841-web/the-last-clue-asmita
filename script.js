@@ -5,19 +5,19 @@ const $=s=>document.querySelector(s);const scenes=[
 {name:'THE OLD LIBRARY',title:'A Note in the Margins',bg:['#253044','#4a3b49','#ddb77a'],ground:'#57485a',objects:[['notebook',666,381,'Inside: “Some people enter your life unexpectedly and somehow become a permanent part of your story.”']]},
 {name:'THE QUIET PARK',title:'Beneath the Bench',bg:['#203446','#315343','#f4bd7d'],ground:'#376448',objects:[['photo',650,418,'The photograph says: “Even on your worst days, never forget that someone genuinely wants to see you smile.”']]},
 {name:'THE OLD STATION',title:'The Last Train',bg:['#192b3a','#40404b','#edb47b'],ground:'#514b4e',objects:[['ticket',656,414,'On the back: “Distance, silence, bad days… none of these should make you feel that you’re alone.”']]},
-{name:'THE ROOFTOP',title:'A Key to Somewhere',bg:['#25314b','#5a4657','#f2ae78'],ground:'#55505a',objects:[['key',697,399,'The box reads: “You’re closer than you think. The final answer is waiting somewhere the world has forgotten.”']]},
+{name:'THE ROOFTOP',title:'A Key to Somewhere',bg:['#25314b','#5a4657','#f2ae78'],ground:'#55505a',objects:[]},
 {name:'THE CAVE',title:'Where Darkness Meets Light',bg:['#111522','#252334','#f9a966'],ground:'#2a2630',objects:[['cave',382,375,'The key fits a narrow lock in the cave wall. Beyond it: a winding passage, crystals, and a distant human silhouette.']]}
 ];
 const miniChallenges={
  envelope:{n:1,title:'The Streetlamp Signal',kind:'memory',scene:'The lamp blinks a four-note code into the mist. Watch its rhythm, then repeat it before the rain comes.',sequence:[1,3,0,2],pads:['✦','●','◆','▲'],reward:'The hidden envelope drops from its brass hook.'},
  notebook:{n:2,title:'The Return-Cart Cipher',kind:'cipher',scene:'The librarian found three torn lines tucked into a book. Reassemble the message in the order suggested by the margin: promise first, reassurance last.',sequence:[1,2,0],options:['NOT ALONE','YOU ARE','STAY CLOSE','THE END'],reward:'The librarian smiles and slides the marked notebook from the return cart.'},
- photo:{n:3,title:'The Runaway Photograph',kind:'hunt',scene:'A mischievous bird has the photograph. Catch it four times before it flits away into the trees.',reward:'The bird drops the photograph beside the old bench.'},
+ photo:{n:3,title:'The Runaway Photograph',kind:'obby',scene:'The photo is caught on a ribbon beyond the park trail. Sprint the little obstacle course and jump at the right moment to catch up.',reward:'Asmita clears the trail and catches the photograph before it blows away.'},
  ticket:{n:4,title:'The Last Train Switchboard',kind:'rail',scene:'Route the train through three switches. Follow the painted arrows on the signal board so it reaches the lit platform.',solution:[1,0,1],reward:'The train slows at the platform. A forgotten ticket flutters from the open window.'},
- key:{n:5,title:'The Rooftop Memory Lock',kind:'dial',scene:'The lock has three tumblers. The scratched note reads: crescent, leaf, sun. Rotate the dials until each symbol lines up with its mark.',solution:[0,1,2],symbols:['☾','❧','☀','✦'],reward:'The box clicks open, revealing a brass key engraved with a tiny star.'}
+ key:{n:6,title:'The Keeper’s Safe',kind:'dial',scene:'The keeper’s brass key fits the old safe. A note taped to its dial reads: crescent, leaf, sun. Match the three marks to open it.',solution:[0,1,2],symbols:['☾','❧','☀','✦'],reward:'The safe clicks open. Inside is the final clue, wrapped around a tiny brass star.'}
 };const letter=`Dear Asmita,\n\nSo, detective, you finally found me.\n\nI know this entire investigation was a little dramatic, but honestly, some people deserve more than an ordinary message.\n\nI just wanted to remind you of something.\n\nYou are genuinely one of the most important people in my life. I'm really glad that our paths crossed, and I hope you never underestimate the value you bring into the lives of people around you.\n\nI might not always have the perfect words, and I might not always know how to fix everything, but there's one thing I want you to remember:\n\nI'm here.\n\nWhenever life gets difficult, whenever you feel like nobody understands you, whenever you need someone to listen to your endless stories, celebrate your smallest achievements, or simply sit with you in silence — you can count on me.\n\nYou don't have to pretend to be happy around me. You don't have to be perfect. Just be yourself.\n\nI'll support your dreams, cheer for your victories, remind you of your strength when you doubt yourself, and stand beside you whenever you need a friend.\n\nAnd please, never think that you're bothering me by reaching out.\n\nYour happiness matters. Your feelings matter. YOU matter.\n\nThank you for being you, Asmita.\n\nAnd if this friendship were a game, I'd honestly choose you as my teammate in every single lifetime.\n\nWith lots of respect, care, and a little bit of teasing,\n\n— Abhay`;
 const flirt=['You somehow make even a moonlit mystery feel warmer.','You’re supposed to be solving mysteries, not becoming my favourite mystery.','I searched the entire map, but apparently the best discovery was you.','The sunset is beautiful, but I think it has some serious competition.'];
 let state=load(),scene=state.scene||0,x=state.x||135,y=state.y||400,targetX=x,targetY=y,keys={},near=null,dialogues=[],music=false,sound=true,audio=null,windSource=null,musicNodes=[],musicTimer=0,cinematic=false,cinematicLabel='',cameraZoom=1,zoomTarget=1,fade=0,endingPhase='',walkProgress=0,sitTimer=0,endingStarted=false,turnStart=0,abhayTurned=false,particles=Array.from({length:90},()=>({x:Math.random()*960,y:Math.random()*540,r:Math.random()*2+1,v:Math.random()*.35+.12})),t=0;
-function load(){try{const saved=JSON.parse(localStorage.getItem('last-clue-save'))||{scene:0,clues:[]};saved.clues=Array.from(new Set(Array.isArray(saved.clues)?saved.clues:[]));saved.scene=Number(saved.scene)||0;/* Resume at the next place if the page closed after recording a clue but before its dialogue ended. */if(saved.scene<5){if(saved.clues.includes('key')||saved.clues.includes('ticket'))saved.scene=Math.max(saved.scene,4);else if(saved.clues.includes('photo'))saved.scene=Math.max(saved.scene,3);else if(saved.clues.includes('notebook'))saved.scene=Math.max(saved.scene,2);else if(saved.clues.includes('message')&&saved.scene===0)saved.scene=1;}return saved}catch{return{scene:0,clues:[]}}}function save(){state.scene=scene;state.x=targetX;state.y=targetY;localStorage.setItem('last-clue-save',JSON.stringify(state));$('#saveStatus').textContent='SAVED';setTimeout(()=>$('#saveStatus').textContent='AUTO-SAVED',900);updateHud()}
+function load(){try{const saved=JSON.parse(localStorage.getItem('last-clue-save'))||{scene:0,clues:[]};saved.clues=Array.from(new Set(Array.isArray(saved.clues)?saved.clues:[]));saved.scene=Number(saved.scene)||0;/* Resume at the next place if the page closed after recording a clue but before its dialogue ended. */if(saved.scene<5){const route=['message','notebook','photo','ticket'];if(!Number.isFinite(saved.nextScene)&&route[saved.scene]&&saved.clues.includes(route[saved.scene]))saved.nextScene=saved.scene+1;}return saved}catch{return{scene:0,clues:[]}}}function save(){state.scene=scene;state.x=targetX;state.y=targetY;localStorage.setItem('last-clue-save',JSON.stringify(state));$('#saveStatus').textContent='SAVED';setTimeout(()=>$('#saveStatus').textContent='AUTO-SAVED',900);updateHud()}
 function allEvidence(){return state.clues.filter(a=>["notebook","photo","ticket","key"].includes(a)).length>=4}
 function updateHud(){const evidence=state.clues.filter(a=>['notebook','photo','ticket','key'].includes(a)).length,percent=Math.min(100,Math.round(evidence/4*100));$('#chapter').textContent=scene<5?'CHAPTER '+(scene+1):'FINAL CHAPTER';$('#progressText').textContent=percent+'% INVESTIGATED';$('#progressBar').style.width=percent+'%';$('#itemCount').textContent=state.clues.length+(state.letter?' + 1':'')}
 function pixel(x,y,w,h,c){ctx.fillStyle=c;ctx.fillRect(Math.round(x),Math.round(y),Math.round(w),Math.round(h))}function rect(x,y,w,h,c){pixel(x,y,w,h,c)}function rng(i){return (Math.sin(i*127.1+scene*311.7)*43758.5453)%1}
@@ -180,7 +180,7 @@ function opening(){scene=Math.max(0,Math.min(8,Number(state.scene)||0));updateHu
 function intro(){hide();scene=state.scene||0;if(scene===8&&state.letter){endCard();return}if(scene===6){if(state.letter)finalTogether();else caveReveal();return}if(scene===4&&allEvidence()&&!state.portalReady){finalPuzzle();return}save();const lines={0:'The message is waiting by the streetlight. Let’s see where it leads.',1:'Back at the old library. I should search for the next clue.',2:'The park photograph is still on my list. The trail continues.',3:'The old station is quiet. I’m close to the last clue.',4:'The rooftop key points somewhere beyond town. The cave must be nearby.'};say('ASM​​ITA',lines[scene]||'Let’s pick up the investigation where I left off.')}function say(who,text,done){cinematic=true;$('#speaker').textContent=who;$('#line').textContent=text;$('#dialogue').classList.remove('hidden');dialogues=[done||(()=>{$('#dialogue').classList.add('hidden');cinematic=false})];}function next(){if(!dialogues.length)return;const f=dialogues.shift();$('#dialogue').classList.add('hidden');cinematic=false;f()}
 function portraitMarkup(who){if(/ABHAY/i.test(who))return '<svg viewBox="0 0 100 110" role="img" aria-label="Abhay"><rect width="100" height="110" rx="12" fill="#1a2030"/><path d="M16 110V88Q20 71 40 68H60Q80 71 84 88V110Z" fill="#141720" stroke="#343949" stroke-width="2"/><path d="M30 40Q29 14 50 12Q72 14 71 42L67 62Q60 73 50 73Q39 72 32 61Z" fill="#34272f"/><ellipse cx="50" cy="43" rx="16" ry="20" fill="#dba985"/><path d="M33 35Q32 14 50 11Q69 12 70 36Q58 27 49 29Q40 27 33 35Z" fill="#30272e"/><circle cx="44" cy="44" r="2" fill="#302638"/><circle cx="57" cy="44" r="2" fill="#302638"/><path d="M45 57Q50 60 55 57" fill="none" stroke="#955b60" stroke-width="2" stroke-linecap="round"/><path d="M28 91Q50 81 72 91" fill="none" stroke="#3b4050" stroke-width="3"/></svg>';if(/LIBRARIAN/i.test(who))return '<svg viewBox="0 0 100 110" role="img" aria-label="The librarian"><rect width="100" height="110" rx="12" fill="#202538"/><path d="M17 110V88Q20 70 40 68H60Q80 71 83 89V110Z" fill="#607365"/><ellipse cx="50" cy="44" rx="17" ry="21" fill="#edc59e"/><path d="M32 40Q31 13 50 12Q69 13 68 42Q58 29 37 37Z" fill="#493a3a"/><circle cx="44" cy="44" r="2" fill="#382e34"/><circle cx="56" cy="44" r="2" fill="#382e34"/><path d="M46 56Q50 58 54 56" fill="none" stroke="#9a5d60" stroke-width="2"/><path d="M20 20H80V29H20Z" fill="#634a42"/><path d="M23 90H47V101H23ZM50 90H77V101H50Z" fill="#e3d2ae" stroke="#967b61" stroke-width="2"/></svg>';if(/NARRATOR/i.test(who))return '<svg viewBox="0 0 100 110" role="img" aria-label="A glowing clue"><rect width="100" height="110" rx="12" fill="#1d2132"/><circle cx="50" cy="51" r="30" fill="#efbb69" opacity=".18"/><path d="M50 20L56 42L78 50L56 57L50 80L43 57L22 50L43 42Z" fill="#f2ce8a"/><circle cx="50" cy="50" r="8" fill="#fff3cb"/><circle cx="24" cy="27" r="2" fill="#f5dba5"/><circle cx="77" cy="33" r="2" fill="#f5dba5"/></svg>';return '<svg viewBox="0 0 100 110" role="img" aria-label="Asmita, the detective"><rect width="100" height="110" rx="12" fill="#252437"/><path d="M12 110V91Q16 72 37 69H63Q84 72 88 91V110Z" fill="#9b745c" stroke="#684e4e" stroke-width="2"/><path d="M38 68L50 85L62 68" fill="#728995"/><path d="M22 47Q18 15 50 14Q80 15 78 50L74 70Q67 80 65 72L67 48L34 46Q31 63 24 70Z" fill="#342433"/><ellipse cx="50" cy="45" rx="18" ry="22" fill="#f1c4a4"/><path d="M31 35Q30 13 50 12Q71 13 70 36Q60 26 49 29Q39 28 31 35Z" fill="#342433"/><path d="M34 47Q40 40 46 46M54 46Q60 40 66 47" fill="none" stroke="#372a32" stroke-width="3" stroke-linecap="round"/><circle cx="41" cy="46" r="2" fill="#f8f5eb"/><circle cx="59" cy="46" r="2" fill="#f8f5eb"/><path d="M46 61Q50 64 54 61" fill="none" stroke="#a95f69" stroke-width="2" stroke-linecap="round"/><path d="M21 34Q25 20 49 18Q72 20 79 34Q64 40 50 38Q34 40 21 34Z" fill="#624b42" stroke="#3e3033" stroke-width="3"/><path d="M29 29Q50 23 71 29" fill="none" stroke="#c09a6e" stroke-width="3"/><rect x="31" y="41" width="17" height="13" rx="5" fill="#a8d9e733" stroke="#34293a" stroke-width="3"/><rect x="52" y="41" width="17" height="13" rx="5" fill="#a8d9e733" stroke="#34293a" stroke-width="3"/><path d="M48 46H52M30 45L25 43M69 45L74 43" stroke="#34293a" stroke-width="3" stroke-linecap="round"/><path d="M84 83L91 96" stroke="#88603e" stroke-width="4" stroke-linecap="round"/><circle cx="81" cy="78" r="9" fill="#aee5ef66" stroke="#ddd8cc" stroke-width="3"/><path d="M77 75Q80 72 84 75" fill="none" stroke="#fff" stroke-width="2" opacity=".8"/><path d="M15 20L18 24L22 25L18 27L15 31L14 27L10 25L14 24Z" fill="#f4d48d"/></svg>'}
 function say(who,text,done){cinematic=true;$('#speaker').textContent=who;$('#line').textContent=text;const portrait=$('#portrait'),dialogue=$('#dialogue');if(portrait)portrait.innerHTML=portraitMarkup(who);dialogue.classList.remove('speaker-asmita','speaker-abhay','speaker-librarian','speaker-narrator');if(/ABHAY/i.test(who))dialogue.classList.add('speaker-abhay');else if(/LIBRARIAN/i.test(who))dialogue.classList.add('speaker-librarian');else if(/NARRATOR/i.test(who))dialogue.classList.add('speaker-narrator');else dialogue.classList.add('speaker-asmita');if(scene===6)zoomTarget=/ABHAY/i.test(who)?1.13:1.06;dialogue.classList.remove('hidden');dialogues=[done||(()=>{dialogue.classList.add('hidden');cinematic=false})]}
-function minigame(id,complete){const p=miniChallenges[id];if(!p){complete();return}let timers=[],huntTimer=0,hits=0,seconds=18,dials=[0,0,0],switches=[0,0,0],picked=[];const cleanup=()=>{timers.forEach(clearTimeout);timers=[];clearInterval(huntTimer)};const title=`<div class="case-file-head"><span class="case-kicker">FIELD CHALLENGE ${String(p.n).padStart(2,'0')} / 05</span><span class="case-stamp">EVIDENCE REQUIRED</span></div><h2>${p.title}</h2><p>${p.scene}</p>`;const done=()=>{cleanup();show(`<div class="case-file-head"><span class="case-kicker">EVIDENCE SECURED</span><span class="case-stamp">CASE ${String(p.n).padStart(2,'0')}</span></div><h2>${p.reward}</h2><div class="clue-reward"><span>✦</span><div><b>CLUE RECOVERED</b><small>Added to Asmita’s detective notebook</small></div></div>`,[{label:'ADD TO CASE FILE',fn:complete}])};const leave=()=>{cleanup();hide()};
+function minigame(id,complete){const p=miniChallenges[id];if(!p){complete();return}let timers=[],huntTimer=0,hits=0,seconds=18,dials=[0,0,0],switches=[0,0,0],picked=[];const cleanup=()=>{timers.forEach(clearTimeout);timers=[];clearInterval(huntTimer)};const title=`<div class="case-file-head"><span class="case-kicker">FIELD CHALLENGE ${String(p.n).padStart(2,'0')} / 06</span><span class="case-stamp">EVIDENCE REQUIRED</span></div><h2>${p.title}</h2><p>${p.scene}</p>`;const done=()=>{cleanup();show(`<div class="case-file-head"><span class="case-kicker">EVIDENCE SECURED</span><span class="case-stamp">CASE ${String(p.n).padStart(2,'0')}</span></div><h2>${p.reward}</h2><div class="clue-reward"><span>✦</span><div><b>CLUE RECOVERED</b><small>Added to Asmita’s detective notebook</small></div></div>`,[{label:'ADD TO CASE FILE',fn:complete}])};const leave=()=>{cleanup();hide()};
 if(p.kind==='memory'){let cursor=0,ready=false,errors=0;const html=`${title}<div class="puzzle-stage signal-stage"><div class="signal-sky"><div class="signal-tower">◉</div><div class="signal-beams"></div><div class="signal-label">SIGNAL SEQUENCE</div></div><div class="signal-status" id="signal-status">Watch the lights...</div><div class="puzzle-meter" id="signal-meter">0 / ${p.sequence.length}</div></div>`;const play=()=>{timers.forEach(clearTimeout);timers=[];ready=false;cursor=0;const status=document.querySelector('#signal-status');if(status)status.textContent=errors?'The rhythm resets. Watch again.':'Watch carefully, then repeat.';document.querySelectorAll('.actions button:nth-child(-n+4)').forEach(b=>b.disabled=true);p.sequence.forEach((pad,i)=>{timers.push(setTimeout(()=>{const e=document.querySelector(`[data-pad="${pad}"]`);if(e)e.classList.add('lit');timers.push(setTimeout(()=>e&&e.classList.remove('lit'),420))},650+i*760))});timers.push(setTimeout(()=>{ready=true;const s=document.querySelector('#signal-status');if(s)s.textContent='Your turn — repeat the signal.';document.querySelectorAll('.actions button:nth-child(-n+4)').forEach(b=>b.disabled=false)},650+p.sequence.length*760))};const choices=p.pads.map((label,i)=>({label,fn:()=>{if(!ready)return;const e=document.querySelector(`[data-pad="${i}"]`);if(e){e.classList.add('lit');setTimeout(()=>e.classList.remove('lit'),180)}if(i===p.sequence[cursor]){cursor++;const meter=document.querySelector('#signal-meter');if(meter)meter.textContent=`${cursor} / ${p.sequence.length}`;if(cursor===p.sequence.length)done()}else{errors++;play()}}}));choices.push({label:'CLOSE CASE FILE',secondary:true,fn:leave});show(html,choices);document.querySelectorAll('.actions button:nth-child(-n+4)').forEach((b,i)=>b.dataset.pad=i);play();return}
 if(p.kind==='cipher'){const render=note=>{const chosen=picked.map(i=>p.options[i]).join(' → ')||'No fragments placed yet';const choices=p.options.map((label,i)=>({label,secondary:true,fn:()=>{if(picked.includes(i))return;if(i===p.sequence[picked.length]){picked.push(i);if(picked.length===p.sequence.length){done();return}}else{picked=[];render('That line does not fit the margin clue. Start the sentence again.');return}render()}}));choices.push({label:'RESET SENTENCE',secondary:true,fn:()=>{picked=[];render()}});choices.push({label:'CLOSE CASE FILE',secondary:true,fn:leave});show(`${title}<div class="puzzle-stage cipher-stage"><div class="cipher-book"><span>ARCHIVE COPY · 1894</span><i>“A friend’s promise is only complete when it ends with reassurance.”</i><div class="cipher-rule"></div><b>REBUILD THE MARGIN NOTE</b><strong>${chosen}</strong></div><div class="puzzle-meter">${picked.length} / ${p.sequence.length} lines placed</div>${note?`<div class="puzzle-note">${note}</div>`:''}</div>`,choices)};render();return}
 if(p.kind==='hunt'){show(`${title}<div class="puzzle-stage hunt-stage"><div class="hunt-topline"><span id="hunt-count">PHOTOGRAPH ${hits} / 4</span><span id="hunt-clock">${seconds}s</span></div><div class="bird-garden"><div class="garden-branch"></div><button id="bird-target" class="bird-target" aria-label="Catch the bird">🐦</button><span class="garden-glow"></span></div><div class="signal-status">Tap the courier bird before it hops away.</div></div>`,[{label:'CLOSE CASE FILE',secondary:true,fn:leave}]);const target=document.querySelector('#bird-target'),stage=document.querySelector('.bird-garden');const hop=()=>{if(!target||!stage)return;target.style.left=`${12+Math.random()*70}%`;target.style.top=`${18+Math.random()*52}%`;target.style.transform=`rotate(${Math.random()*24-12}deg)`};target.addEventListener('click',()=>{hits++;const count=document.querySelector('#hunt-count');if(count)count.textContent=`PHOTOGRAPH ${hits} / 4`;if(hits>=4){done();return}hop()});hop();huntTimer=setInterval(()=>{seconds--;const clock=document.querySelector('#hunt-clock');if(clock)clock.textContent=`${seconds}s`;if(seconds<=0){cleanup();show(`${title}<div class="puzzle-stage"><h3>The bird escaped with the photo!</h3><p>Take a breath, watch its path, and try once more.</p></div>`,[{label:'TRY AGAIN',fn:()=>minigame(id,complete)},{label:'CLOSE CASE FILE',secondary:true,fn:leave}])}},1000);return}
@@ -203,6 +203,376 @@ function notebook(){let names={message:'The mysterious message',notebook:'The ol
 function inventory(){show(`<div class="eyebrow">YOUR INVENTORY</div><h2>Evidence & keepsakes</h2><ol class="clue-list">${(state.clues.filter(a=>a!=='message').map(a=>({notebook:'A small notebook',photo:'A photograph',ticket:'A train ticket',key:'A brass key'}[a])).concat(state.letter?['A letter from Abhay']:[])).map(a=>`<li>${a}</li>`).join('')||'<li>Your notebook is waiting for its first clue.</li>'}</ol>`,[{label:'BACK TO THE SCENE',fn:hide}])}
 function move(dx,dy){targetX=Math.max(45,Math.min(915,targetX+dx));targetY=Math.max(310,Math.min(432,targetY+dy));if(scene===5&&targetX>435){targetX=435;toast('A narrow path winds deeper into the cave…')}near=null;save()}
 function interact(){if(!overlay.classList.contains('closed'))return;if(!$('#dialogue').classList.contains('hidden')){next();return}if(near){investigate(near);return}const target=scenes[Math.min(scene,5)].objects[0];if(target&&Math.hypot(x-target[1],y-target[2])<115)investigate(target[0]);else toast('Look for a glowing object nearby.')}
+// Illustrated character pass, animated chapter travel, and new field challenges.
+let transitionTo=null,transitionStarted=0;
+
+function drawAsmita(px,py,scale=1.25,walk=0,pose='detective'){
+  const s=scale,step=Math.sin(walk)*4,arm=Math.sin(walk+Math.PI)*3.4,wind=Math.sin(t*1.7)*1.2;
+  const skin='#f4c9ad',hair='#2d2029',coat='#a97c61',coatLight='#c19676',ink='#382d36';
+  ctx.save();ctx.translate(px,py);ctx.scale(s,s);
+  ctx.fillStyle='#07091055';ctx.beginPath();ctx.ellipse(0,3,26,6,0,0,Math.PI*2);ctx.fill();
+  if(pose==='sit'){
+    limb2D([[-8,2],[-11,16],[-32,24]],'#3b3d49',9);limb2D([[8,2],[13,16],[35,23]],'#3b3d49',9);
+    limb2D([[-32,24],[-42,24]],'#765748',6);limb2D([[35,23],[45,23]],'#765748',6);
+  }else{
+    limb2D([[-7,1],[-8+step*.55,19],[-10+step,34]],'#40414c',8.5);
+    limb2D([[7,1],[8-step*.55,19],[10-step,34]],'#40414c',8.5);
+    limb2D([[-10+step,34],[-19+step,35]],'#755344',6.5);limb2D([[10-step,34],[19-step,35]],'#755344',6.5);
+    ctx.strokeStyle='#77727a';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(-11+step,20);ctx.lineTo(-5+step,20);ctx.moveTo(6-step,20);ctx.lineTo(12-step,20);ctx.stroke();
+  }
+  // Tailored detective trench coat with shaped shoulders, waist, seams and lapels.
+  const cg=ctx.createLinearGradient(-20,-48,19,10);cg.addColorStop(0,'#c19574');cg.addColorStop(.48,coat);cg.addColorStop(1,'#805d50');
+  ctx.beginPath();ctx.moveTo(-13,-56);ctx.quadraticCurveTo(-21,-52,-19,-35);ctx.lineTo(-16,8);ctx.quadraticCurveTo(0,14,16,8);ctx.lineTo(19,-35);ctx.quadraticCurveTo(21,-52,13,-56);ctx.quadraticCurveTo(0,-63,-13,-56);ctx.closePath();ctx.fillStyle=cg;ctx.fill();ctx.strokeStyle='#654941';ctx.lineWidth=1.5;ctx.stroke();
+  rounded2D(-8,-54,16,43,4,'#6f8993','#53616b');
+  ctx.fillStyle='#e4d5bd';ctx.beginPath();ctx.moveTo(-12,-54);ctx.lineTo(-3,-40);ctx.lineTo(0,-48);ctx.lineTo(4,-40);ctx.lineTo(13,-54);ctx.closePath();ctx.fill();
+  ctx.strokeStyle='#e4c59a';ctx.lineWidth=1.3;ctx.beginPath();ctx.moveTo(-12,-52);ctx.lineTo(-5,-34);ctx.moveTo(12,-52);ctx.lineTo(5,-34);ctx.stroke();
+  // Sleeve swing follows the walk; the magnifier hand stays raised and readable.
+  limb2D([[-15,-51],[-22,-38],[-21+arm*.55,-27]],coat,8);limb2D([[15,-51],[22,-38],[22-arm,-30]],coat,8);
+  ctx.fillStyle=skin;ctx.beginPath();ctx.ellipse(-21+arm*.55,-26,4,4.6,0,0,Math.PI*2);ctx.ellipse(22-arm,-29,4,4.6,0,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle='#664a42';ctx.beginPath();ctx.ellipse(-21+arm*.55,-26,4.2,4.2,0,0,Math.PI*2);ctx.fill();
+  rounded2D(12,-30,12,16,2,'#ead8b8','#96704f');ctx.strokeStyle='#a37b59';ctx.lineWidth=.8;ctx.beginPath();ctx.moveTo(15,-26);ctx.lineTo(21,-26);ctx.moveTo(15,-22);ctx.lineTo(21,-22);ctx.stroke();
+  for(const [bx,by] of [[5,-31],[5,-18]]){ctx.fillStyle='#f0ce8b';ctx.beginPath();ctx.arc(bx,by,1.7,0,Math.PI*2);ctx.fill()}
+  // Dark bob, soft flyaways, fair face, expressive eyes and warm cheeks.
+  ctx.fillStyle=hair;ctx.beginPath();ctx.moveTo(-17,-87);ctx.quadraticCurveTo(-20,-111,0,-112);ctx.quadraticCurveTo(21,-110,18,-85);ctx.lineTo(17,-56+wind);ctx.quadraticCurveTo(10,-51,8,-67);ctx.lineTo(-10,-67);ctx.quadraticCurveTo(-13,-53,-19,-57);ctx.closePath();ctx.fill();
+  ctx.strokeStyle='#654453';ctx.lineWidth=1.7;ctx.beginPath();ctx.moveTo(-13,-98);ctx.quadraticCurveTo(-3,-108,5,-102);ctx.moveTo(10,-100);ctx.quadraticCurveTo(17,-91,13,-78);ctx.stroke();
+  ctx.fillStyle=skin;ctx.beginPath();ctx.ellipse(0,-83,14.5,19,0,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle='#e79f92';ctx.globalAlpha=.38;ctx.beginPath();ctx.ellipse(-9,-76,3.2,1.8,0,0,Math.PI*2);ctx.ellipse(9,-76,3.2,1.8,0,0,Math.PI*2);ctx.fill();ctx.globalAlpha=1;
+  ctx.strokeStyle='#573c42';ctx.lineWidth=1.5;ctx.beginPath();ctx.moveTo(-9,-88);ctx.quadraticCurveTo(-5,-91,-2,-88);ctx.moveTo(3,-88);ctx.quadraticCurveTo(7,-91,10,-88);ctx.stroke();
+  const blink=Math.sin(t*.65+1.2)>.994;
+  if(blink){ctx.strokeStyle='#453238';ctx.lineWidth=1.8;ctx.beginPath();ctx.moveTo(-8,-82);ctx.quadraticCurveTo(-5,-80,-2,-82);ctx.moveTo(3,-82);ctx.quadraticCurveTo(7,-80,10,-82);ctx.stroke()}
+  else{ctx.fillStyle='#fffdf7';ctx.beginPath();ctx.ellipse(-5,-82,3.2,3.8,0,0,Math.PI*2);ctx.ellipse(6,-82,3.2,3.8,0,0,Math.PI*2);ctx.fill();ctx.fillStyle='#665062';ctx.beginPath();ctx.ellipse(-4.5,-82,1.8,2.8,0,0,Math.PI*2);ctx.ellipse(6.5,-82,1.8,2.8,0,0,Math.PI*2);ctx.fill();ctx.fillStyle='#fff';ctx.beginPath();ctx.arc(-4,-83,0.8,0,Math.PI*2);ctx.arc(7,-83,0.8,0,Math.PI*2);ctx.fill()}
+  ctx.fillStyle='#cf927f';ctx.beginPath();ctx.moveTo(0,-80);ctx.lineTo(-1,-74);ctx.quadraticCurveTo(1,-72,3,-74);ctx.fill();
+  ctx.strokeStyle='#a55262';ctx.lineWidth=1.7;ctx.lineCap='round';ctx.beginPath();ctx.moveTo(-3,-68);ctx.quadraticCurveTo(0,-65,4,-68);ctx.stroke();
+  // Her spectacles are the signature: large, glossy frames drawn above her eyes.
+  ctx.fillStyle='#89d8e533';ctx.strokeStyle='#342839';ctx.lineWidth=2.3;ctx.beginPath();ctx.roundRect(-12,-87,10,10,3);ctx.roundRect(2,-87,10,10,3);ctx.fill();ctx.stroke();
+  ctx.beginPath();ctx.moveTo(-2,-83);ctx.lineTo(2,-83);ctx.moveTo(-12,-83);ctx.lineTo(-16,-85);ctx.moveTo(12,-83);ctx.lineTo(16,-85);ctx.stroke();
+  ctx.strokeStyle='#e9ffffaa';ctx.lineWidth=.8;ctx.beginPath();ctx.moveTo(-10,-85);ctx.lineTo(-7,-85);ctx.moveTo(4,-85);ctx.lineTo(7,-85);ctx.stroke();
+  // A shaped fedora, unmistakably a detective hat rather than a knit cap.
+  const hg=ctx.createLinearGradient(-24,-128,23,-97);hg.addColorStop(0,'#88705e');hg.addColorStop(.5,'#634e44');hg.addColorStop(1,'#493b3b');
+  ctx.fillStyle=hg;ctx.beginPath();ctx.moveTo(-28,-101);ctx.quadraticCurveTo(-23,-106,-14,-105);ctx.lineTo(-12,-121);ctx.quadraticCurveTo(-8,-127,0,-126);ctx.quadraticCurveTo(12,-126,15,-119);ctx.lineTo(16,-105);ctx.quadraticCurveTo(25,-106,29,-101);ctx.quadraticCurveTo(17,-96,0,-98);ctx.quadraticCurveTo(-17,-97,-28,-101);ctx.closePath();ctx.fill();ctx.strokeStyle='#3e3033';ctx.lineWidth=1.5;ctx.stroke();
+  ctx.strokeStyle='#c7a176';ctx.lineWidth=2.1;ctx.beginPath();ctx.moveTo(-15,-105);ctx.quadraticCurveTo(0,-102,16,-105);ctx.stroke();ctx.strokeStyle='#92745a';ctx.lineWidth=.8;ctx.beginPath();ctx.moveTo(-7,-121);ctx.quadraticCurveTo(0,-116,8,-121);ctx.stroke();
+  // Notebook and magnifying glass stay visible in every walking frame.
+  rounded2D(15,-18,13,18,2,'#6a4a4b','#d1aa76');ctx.strokeStyle='#e5cf9e';ctx.lineWidth=.7;ctx.beginPath();ctx.moveTo(18,-14);ctx.lineTo(25,-14);ctx.moveTo(18,-10);ctx.lineTo(24,-10);ctx.stroke();
+  ctx.strokeStyle='#e4e4db';ctx.lineWidth=2.5;ctx.beginPath();ctx.arc(-22,-45,8,0,Math.PI*2);ctx.stroke();ctx.fillStyle='#9edbe888';ctx.fill();ctx.strokeStyle='#f5f4e9';ctx.lineWidth=1;ctx.beginPath();ctx.arc(-24,-47,4,3.8,5.8);ctx.stroke();limb2D([[-17,-39],[-13,-31]],'#765342',3.2);
+  ctx.restore();
+}
+
+function drawAbhay(px,py,s=1.18,pose='silhouette'){
+  const q=pose==='turning'?Math.min(1,(performance.now()-turnStart)/1250):1;
+  const front=pose==='turned'||(pose==='turning'&&q>.5),wind=Math.sin(t*1.4)*1.3;
+  ctx.save();ctx.translate(px,py);if(pose==='turning')ctx.scale(.12+Math.abs(Math.cos(q*Math.PI))*.88,1);ctx.scale(s,s);
+  ctx.fillStyle='#06091266';ctx.beginPath();ctx.ellipse(0,3,25,6,0,0,Math.PI*2);ctx.fill();
+  if(pose==='sit'){
+    // Relaxed side-by-side pose for the final safe overlook.
+    limb2D([[-8,-2],[-8,14],[-29,24]],'#11141d',11);limb2D([[8,-2],[12,14],[34,24]],'#11141d',11);
+    limb2D([[-29,24],[-39,24]],'#181922',6);limb2D([[34,24],[45,24]],'#181922',6);
+    rounded2D(-17,-54,34,49,11,'#171a24','#333844');ctx.fillStyle='#242834';ctx.beginPath();ctx.ellipse(0,-82,15,19,0,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle='#d6a17f';ctx.beginPath();ctx.ellipse(0,-82,12,15,0,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle='#27222a';ctx.beginPath();ctx.moveTo(-13,-88);ctx.quadraticCurveTo(-12,-105,1,-103);ctx.quadraticCurveTo(12,-104,14,-91);ctx.quadraticCurveTo(5,-96,-2,-94);ctx.quadraticCurveTo(-7,-90,-13,-88);ctx.fill();
+    ctx.restore();return;
+  }
+  const back=pose==='silhouette'||(pose==='turning'&&!front);
+  // Fitted black jacket, collar, sleeve seams and clean trousers.
+  if(back){
+    limb2D([[-8,-2],[-9+Math.sin(t*5)*1.8,18],[-10,39]],'#11131b',10);limb2D([[8,-2],[9-Math.sin(t*5)*1.8,18],[10,39]],'#11131b',10);
+    limb2D([[-10,39],[-20,40]],'#090b11',7);limb2D([[10,39],[21,40]],'#090b11',7);
+    ctx.beginPath();ctx.moveTo(-15,-63);ctx.quadraticCurveTo(-23,-59,-22,-38);ctx.lineTo(-17,-6);ctx.quadraticCurveTo(0,1,17,-6);ctx.lineTo(22,-38);ctx.quadraticCurveTo(23,-59,15,-63);ctx.quadraticCurveTo(0,-70,-15,-63);ctx.closePath();ctx.fillStyle='#171a23';ctx.fill();ctx.strokeStyle='#e3ae69';ctx.lineWidth=1.4;ctx.stroke();
+    ctx.strokeStyle='#383d49';ctx.lineWidth=1.2;ctx.beginPath();ctx.moveTo(-12,-51);ctx.quadraticCurveTo(0,-45,12,-51);ctx.moveTo(-11,-13);ctx.lineTo(-5,-13);ctx.moveTo(5,-13);ctx.lineTo(11,-13);ctx.stroke();
+    // Hands slide naturally into the pockets while he watches the sunset.
+    limb2D([[-14,-58],[-21,-41],[-17,-24]],'#171a23',8);limb2D([[14,-58],[21,-41],[17,-24]],'#171a23',8);
+    ctx.strokeStyle='#080a10';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(-19,-28);ctx.quadraticCurveTo(-13,-24,-8,-29);ctx.moveTo(19,-28);ctx.quadraticCurveTo(13,-24,8,-29);ctx.stroke();
+  }else{
+    limb2D([[-8,-1],[-9,17],[-10,39]],'#12151e',10);limb2D([[8,-1],[9,17],[10,39]],'#12151e',10);limb2D([[-10,39],[-21,40]],'#090b11',7);limb2D([[10,39],[21,40]],'#090b11',7);
+    ctx.beginPath();ctx.moveTo(-15,-62);ctx.quadraticCurveTo(-23,-59,-21,-37);ctx.lineTo(-17,-5);ctx.quadraticCurveTo(0,2,17,-5);ctx.lineTo(21,-37);ctx.quadraticCurveTo(23,-59,15,-62);ctx.quadraticCurveTo(0,-69,-15,-62);ctx.closePath();ctx.fillStyle='#171a23';ctx.fill();ctx.strokeStyle='#333a49';ctx.lineWidth=1.3;ctx.stroke();
+    ctx.fillStyle='#272b36';ctx.beginPath();ctx.moveTo(-7,-61);ctx.lineTo(0,-49);ctx.lineTo(7,-61);ctx.lineTo(5,-8);ctx.lineTo(-5,-8);ctx.closePath();ctx.fill();
+    ctx.strokeStyle='#c39867';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(0,-47);ctx.lineTo(0,-17);ctx.stroke();ctx.fillStyle='#dab77d';ctx.beginPath();ctx.arc(0,-42,1.7,0,Math.PI*2);ctx.fill();
+    limb2D([[-15,-55],[-22,-39],[-22+Math.sin(t*4)*2,-22]],'#171a23',8);limb2D([[15,-55],[22,-39],[22-Math.sin(t*4)*2,-22]],'#171a23',8);
+    ctx.fillStyle='#d6a17f';ctx.beginPath();ctx.ellipse(-22+Math.sin(t*4)*2,-21,4,5,0,0,Math.PI*2);ctx.ellipse(22-Math.sin(t*4)*2,-21,4,5,0,0,Math.PI*2);ctx.fill();
+  }
+  // His silhouette is hair, not a hat: a defined swept-back quiff with a clean hairline.
+  ctx.fillStyle='#29232a';ctx.beginPath();ctx.moveTo(-15,-82);ctx.quadraticCurveTo(-20,-104,-4,-108);ctx.quadraticCurveTo(2,-113,9,-107);ctx.quadraticCurveTo(19,-104,16,-88);ctx.lineTo(13,-70);ctx.quadraticCurveTo(0,-64,-13,-72);ctx.closePath();ctx.fill();
+  if(front){
+    ctx.fillStyle='#d7a27f';ctx.beginPath();ctx.moveTo(-12,-84);ctx.quadraticCurveTo(-12,-99,0,-99);ctx.quadraticCurveTo(13,-99,13,-84);ctx.lineTo(10,-70);ctx.quadraticCurveTo(0,-62,-10,-70);ctx.closePath();ctx.fill();
+    ctx.fillStyle='#30262d';ctx.beginPath();ctx.moveTo(-14,-89);ctx.quadraticCurveTo(-13,-108,-1,-108);ctx.quadraticCurveTo(13,-110,17,-94);ctx.quadraticCurveTo(8,-99,3,-98);ctx.quadraticCurveTo(-4,-95,-13,-88);ctx.closePath();ctx.fill();
+    ctx.strokeStyle='#35282f';ctx.lineWidth=1.7;ctx.beginPath();ctx.moveTo(-9,-85);ctx.quadraticCurveTo(-5,-88,-2,-86);ctx.moveTo(3,-86);ctx.quadraticCurveTo(7,-89,10,-85);ctx.stroke();
+    ctx.fillStyle='#332a35';ctx.beginPath();ctx.ellipse(-5,-81,2.1,2.7,0,0,Math.PI*2);ctx.ellipse(6,-81,2.1,2.7,0,0,Math.PI*2);ctx.fill();ctx.fillStyle='#fff';ctx.beginPath();ctx.arc(-4.3,-82,0.8,0,Math.PI*2);ctx.arc(6.7,-82,0.8,0,Math.PI*2);ctx.fill();
+    ctx.strokeStyle='#996253';ctx.lineWidth=1.5;ctx.lineCap='round';ctx.beginPath();ctx.moveTo(-3,-70);ctx.quadraticCurveTo(1,-67,5,-70);ctx.stroke();
+    ctx.fillStyle='#f0bd9b55';ctx.beginPath();ctx.ellipse(-9,-75,3,1.4,0,0,Math.PI*2);ctx.ellipse(9,-75,3,1.4,0,0,Math.PI*2);ctx.fill();
+  }else{
+    ctx.fillStyle='#30272e';ctx.beginPath();ctx.ellipse(0,-80,13,16,0,0,Math.PI*2);ctx.fill();
+    ctx.strokeStyle='#463540';ctx.lineWidth=1.1;ctx.beginPath();ctx.moveTo(-10,-91);ctx.quadraticCurveTo(-3,-102,5,-97);ctx.moveTo(8,-94);ctx.lineTo(12,-86);ctx.stroke();
+  }
+  // Sunset rim-light traces his hair and jacket; his fixed position never shifts during the turn.
+  ctx.strokeStyle='#f5bf77aa';ctx.lineWidth=1.2;ctx.beginPath();ctx.moveTo(-15,-62);ctx.quadraticCurveTo(-23,-58,-21,-37);ctx.moveTo(15,-62);ctx.quadraticCurveTo(23,-58,21,-37);ctx.moveTo(-14,-82);ctx.quadraticCurveTo(-19,-105,-4,-108);ctx.moveTo(14,-82);ctx.quadraticCurveTo(19,-103,9,-107);ctx.stroke();
+  ctx.restore();
+}
+
+function drawNpc(px,py,phase,top,action='walk',scale=.82){
+  const s=scale,step=action==='read'?0:Math.sin(t*5+phase)*4,swing=Math.sin(t*3.4+phase)*3.2;
+  const skin=['#dfac8b','#c8896f','#f0c4a0','#b77760'][phase%4|0],hair=['#3e3036','#293139','#5a4038','#352b45'][phase%4|0];
+  ctx.save();ctx.translate(px,py);ctx.scale(s,s);ctx.fillStyle='#0c10194d';ctx.beginPath();ctx.ellipse(0,2,15,4,0,0,Math.PI*2);ctx.fill();
+  limb2D([[-4,0],[-5+step,12],[-6+step,22]],'#343a48',5);limb2D([[4,0],[5-step,12],[6-step,22]],'#343a48',5);limb2D([[-6+step,22],[-13+step,23]],'#59463f',4);limb2D([[6-step,22],[13-step,23]],'#59463f',4);
+  const cg=ctx.createLinearGradient(-10,-30,10,-3);cg.addColorStop(0,top);cg.addColorStop(1,'#283345');ctx.beginPath();ctx.moveTo(-9,-30);ctx.quadraticCurveTo(0,-34,9,-30);ctx.lineTo(11,-3);ctx.quadraticCurveTo(0,1,-11,-3);ctx.closePath();ctx.fillStyle=cg;ctx.fill();ctx.strokeStyle='#171c28';ctx.lineWidth=1;ctx.stroke();
+  limb2D([[-8,-26],[-12+swing,-14],[-10+swing,-8]],top,5.2);limb2D([[8,-26],[12-swing,-14],[10-swing,-8]],top,5.2);
+  ctx.fillStyle=skin;ctx.beginPath();ctx.arc(-10+swing,-7,2.8,0,Math.PI*2);ctx.arc(10-swing,-7,2.8,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle=skin;ctx.beginPath();ctx.ellipse(0,-39,8.5,10,0,0,Math.PI*2);ctx.fill();ctx.fillStyle=hair;ctx.beginPath();ctx.moveTo(-9,-41);ctx.quadraticCurveTo(-10,-52,0,-51);ctx.quadraticCurveTo(10,-51,9,-40);ctx.quadraticCurveTo(3,-45,-3,-42);ctx.closePath();ctx.fill();
+  ctx.fillStyle='#40323a';ctx.beginPath();ctx.arc(-3,-39,1.1,0,Math.PI*2);ctx.arc(3,-39,1.1,0,Math.PI*2);ctx.fill();ctx.strokeStyle='#a75e62';ctx.lineWidth=.8;ctx.beginPath();ctx.moveTo(-2,-33);ctx.quadraticCurveTo(0,-31,2,-33);ctx.stroke();
+  if(action==='read'){limb2D([[-7,-25],[-3,-16]],top,4.3);limb2D([[7,-25],[3,-16]],top,4.3);rounded2D(-7,-20,14,9,1,'#e9d8b8','#9b795d');ctx.strokeStyle='#ad8b69';ctx.lineWidth=.6;ctx.beginPath();ctx.moveTo(0,-19);ctx.lineTo(0,-12);ctx.stroke()}
+  if(action==='talk'){limb2D([[7,-26],[13,-33],[17,-36]],top,4.4);ctx.fillStyle=skin;ctx.beginPath();ctx.arc(17,-36,2.5,0,Math.PI*2);ctx.fill()}
+  ctx.restore();
+}
+
+function drawAmbientNpcs(){
+  if(scene>=8)return;
+  const people={
+    0:[[90,422,1,'#86675e','walk',90],[225,420,2,'#506980','walk',120],[355,423,4,'#827064','walk',100],[716,421,3,'#6f7e62','talk',0],[758,421,1,'#98705b','talk',0],[862,420,5,'#6d7483','walk',110]],
+    1:[[82,420,1,'#687f67','read',0],[151,421,2,'#846f83','walk',110],[253,420,4,'#806475','read',0],[335,420,0,'#637586','walk',90],[422,421,2,'#687584','talk',0],[466,421,3,'#9a7058','talk',0],[559,420,4,'#85734e','read',0],[655,420,1,'#63765f','walk',105],[755,420,5,'#837454','read',0],[830,421,3,'#64778c','talk',0],[875,421,4,'#92715b','talk',0]],
+    2:[[84,420,1,'#778260','walk',130],[188,421,4,'#7d8060','talk',0],[229,421,1,'#a57561','talk',0],[360,420,5,'#657e71','walk',100],[540,421,3,'#887553','walk',130],[716,420,2,'#617b80','talk',0],[759,420,0,'#92705f','talk',0],[867,421,4,'#687d86','walk',110]],
+    3:[[95,420,4,'#718275','walk',100],[242,421,1,'#746781','walk',120],[435,422,3,'#7b6880','read',0],[583,420,2,'#847353','walk',100],[700,421,4,'#677d6c','talk',0],[743,421,1,'#a4745f','talk',0],[858,420,5,'#61788b','walk',110]],
+    4:[[125,421,2,'#7f7358','talk',0],[168,421,4,'#667f78','talk',0],[290,420,1,'#766580','walk',90],[425,421,5,'#85735e','walk',110],[865,420,3,'#805e6e','walk',100]]
+  };
+  for(const [px0,py,phase,top,action,range] of people[scene]||[]){
+    const drift=range?((t*(action==='walk'?17:9)+phase*31)%range-range/2):Math.sin(t*.28+phase)*1.5;
+    const px=px0+drift,bob=action==='read'?Math.sin(t*1.35+phase)*.8:Math.sin(t*3+phase)*1.4;
+    drawNpc(px,py+bob,phase,top,action,scene===1?.9:.84);
+    if(action==='talk'&&Math.sin(t*2+phase)>.12){ctx.fillStyle='#fff8e9';ctx.beginPath();ctx.roundRect(px+9,py-57,23,15,6);ctx.fill();ctx.beginPath();ctx.moveTo(px+14,py-44);ctx.lineTo(px+13,py-39);ctx.lineTo(px+19,py-44);ctx.fill();ctx.fillStyle='#665969';for(let i=0;i<3;i++){ctx.beginPath();ctx.arc(px+14+i*6,py-50,1.2,0,Math.PI*2);ctx.fill()}}
+  }
+}
+
+function drawKeeper(px,py,s=1){
+  ctx.save();ctx.translate(px,py);ctx.scale(s,s);ctx.fillStyle='#080b1355';ctx.beginPath();ctx.ellipse(0,2,23,5,0,0,Math.PI*2);ctx.fill();
+  limb2D([[-7,-3],[-8,18],[-9,35]],'#333846',8);limb2D([[7,-3],[8,18],[9,35]],'#333846',8);limb2D([[-9,35],[-18,36]],'#56433e',6);limb2D([[9,35],[19,36]],'#56433e',6);
+  const jacket=ctx.createLinearGradient(-19,-56,18,-4);jacket.addColorStop(0,'#73526a');jacket.addColorStop(.55,'#574456');jacket.addColorStop(1,'#393241');ctx.beginPath();ctx.moveTo(-14,-58);ctx.quadraticCurveTo(-23,-55,-20,-34);ctx.lineTo(-15,-4);ctx.quadraticCurveTo(0,2,15,-4);ctx.lineTo(20,-34);ctx.quadraticCurveTo(23,-55,14,-58);ctx.closePath();ctx.fillStyle=jacket;ctx.fill();ctx.strokeStyle='#2d2935';ctx.lineWidth=1.5;ctx.stroke();
+  ctx.fillStyle='#b98663';ctx.beginPath();ctx.moveTo(-6,-56);ctx.lineTo(0,-45);ctx.lineTo(7,-56);ctx.lineTo(5,-8);ctx.lineTo(-5,-8);ctx.closePath();ctx.fill();
+  limb2D([[-14,-50],[-25,-38],[-19,-25]],'#60495d',8);limb2D([[14,-50],[25,-37],[19,-24]],'#60495d',8);ctx.fillStyle='#d8a17e';ctx.beginPath();ctx.arc(-19,-24,4,0,Math.PI*2);ctx.arc(19,-23,4,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle='#3f3437';ctx.beginPath();ctx.ellipse(0,-81,16,20,0,0,Math.PI*2);ctx.fill();ctx.fillStyle='#e2b28e';ctx.beginPath();ctx.ellipse(0,-79,12,16,0,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle='#30272f';ctx.beginPath();ctx.moveTo(-14,-84);ctx.quadraticCurveTo(-12,-103,2,-102);ctx.quadraticCurveTo(15,-101,16,-85);ctx.quadraticCurveTo(7,-92,0,-89);ctx.quadraticCurveTo(-8,-86,-14,-81);ctx.closePath();ctx.fill();
+  ctx.fillStyle='#46353a';ctx.beginPath();ctx.arc(-4,-80,1.5,0,Math.PI*2);ctx.arc(5,-80,1.5,0,Math.PI*2);ctx.fill();ctx.strokeStyle='#9a5d60';ctx.lineWidth=1.4;ctx.beginPath();ctx.moveTo(-3,-70);ctx.quadraticCurveTo(0,-68,4,-70);ctx.stroke();
+  ctx.strokeStyle='#d6b876';ctx.lineWidth=1.6;ctx.beginPath();ctx.arc(15,-12,4,0,Math.PI*2);ctx.moveTo(18,-9);ctx.lineTo(24,-3);ctx.stroke();ctx.restore();
+}
+
+function drawSafe(px,py,open=false){
+  ctx.save();ctx.shadowColor='#f2c77888';ctx.shadowBlur=18;const g=ctx.createLinearGradient(px-25,py-35,px+28,py+25);g.addColorStop(0,'#8a806f');g.addColorStop(.48,'#596375');g.addColorStop(1,'#343847');
+  rounded2D(px-25,py-39,50,62,8,g,'#d8bd80');rounded2D(px-19,py-33,38,50,5,'#424858','#aa9569');
+  ctx.fillStyle='#e0c17d';ctx.beginPath();ctx.arc(px,py-8,13,0,Math.PI*2);ctx.fill();ctx.fillStyle='#515364';ctx.beginPath();ctx.arc(px,py-8,9,0,Math.PI*2);ctx.fill();ctx.fillStyle='#e8d7aa';ctx.beginPath();ctx.arc(px,py-8,2.4,0,Math.PI*2);ctx.fill();
+  ctx.strokeStyle='#d7bd82';ctx.lineWidth=2;ctx.beginPath();ctx.arc(px,py-8,18,-2.4,2.4);ctx.stroke();
+  if(open){ctx.save();ctx.translate(px-20,py-33);ctx.rotate(-.28);rounded2D(-8,-3,16,50,3,'#d6c6a3','#8f7558');ctx.restore();ctx.fillStyle='#f2d28e';ctx.beginPath();ctx.arc(px+5,py+14,3,0,Math.PI*2);ctx.fill()}
+  ctx.restore();
+}
+
+function drawPromptAt(px,py,label){
+  ctx.save();ctx.font='600 12px Trebuchet MS,Arial';ctx.textAlign='center';const w=ctx.measureText(label).width+26;ctx.fillStyle='#10131ded';ctx.strokeStyle='#f0d294';ctx.lineWidth=1.2;ctx.beginPath();ctx.roundRect(px-w/2,py-48,w,27,12);ctx.fill();ctx.stroke();ctx.fillStyle='#fff2d0';ctx.fillText('✦ '+label,px,py-30);ctx.restore();
+}
+
+function drawRooftopProps(){
+  if(scene!==4)return;near=null;drawKeeper(675,422,1.1);drawSafe(832,409,!!state.clues.includes('key'));
+  if(Math.hypot(x-675,y-405)<83){near='key';drawPromptAt(675,405,state.safeKey?'TALK TO THE KEEPER':'CHALLENGE THE KEEPER')}
+  else if(Math.hypot(x-832,y-401)<82){near='safe';drawPromptAt(832,401,state.safeKey?'OPEN THE SAFE':'LOCKED SAFE')}
+}
+
+function drawSceneExit(){
+  if(scene>=4||state.nextScene!==scene+1)return;
+  const pulse=1+Math.sin(t*2.8)*.045,xp=902;ctx.save();ctx.shadowColor='#f1d08b';ctx.shadowBlur=16;
+  ctx.strokeStyle='#92765f';ctx.lineWidth=8;ctx.beginPath();ctx.moveTo(xp-22,431);ctx.lineTo(xp-22,389);ctx.quadraticCurveTo(xp-22,358,xp,358);ctx.quadraticCurveTo(xp+22,358,xp+22,389);ctx.lineTo(xp+22,431);ctx.stroke();
+  ctx.strokeStyle=`rgba(246,211,145,${.55+.25*Math.sin(t*2)})`;ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(xp-14,428);ctx.lineTo(xp-14,390);ctx.quadraticCurveTo(xp-14,372,xp,372);ctx.quadraticCurveTo(xp+14,372,xp+14,390);ctx.lineTo(xp+14,428);ctx.stroke();
+  ctx.fillStyle='#f2d18d';ctx.beginPath();ctx.moveTo(xp+30,397);ctx.lineTo(xp+40,402);ctx.lineTo(xp+30,407);ctx.fill();ctx.restore();
+  if(Math.hypot(x-xp,y-402)<105){near='exit';drawPromptAt(xp,402,'FOLLOW THE CLUE TRAIL')}
+}
+
+function startNewCase(){state={scene:0,clues:[],started:true,safeKey:false,nextScene:null};scene=0;x=targetX=120;y=targetY=404;transitionTo=null;endingPhase='';endingStarted=false;hide();save();say('ASMITA','The streetlamp is blinking in a strange rhythm. Someone left me a case to solve.');}
+
+function resumeCase(){
+  scene=Math.max(0,Math.min(8,Number(state.scene)||0));x=targetX=Number.isFinite(state.x)?state.x:120;y=targetY=Number.isFinite(state.y)?state.y:404;updateHud();hide();
+  if(scene>=8&&state.letter){finalTogether();return}if(scene>=5&&scene<=7){caveReveal();return}if(scene===4&&allEvidence()&&!state.portalReady){finalPuzzle();return}
+  save();say('ASMITA',state.nextScene===scene+1?'The clue is filed. I can see the lit arch ahead; I should follow it when I’m ready.':'Let’s pick up the investigation where I left off.');
+}
+
+function advance(){
+  if(scene>=4){finalPuzzle();return}
+  state.nextScene=scene+1;save();
+  const stories=[
+    ['The message is addressed to the old library. Its doors should still be open.','The lamplight from the library is glowing at the end of the street. I’ll follow the arch.'],
+    ['A pressed leaf marks the next line: “Look where the birds gather.”','The library steps lead into the park. I should follow the path beyond the shelves.'],
+    ['The photograph’s corner bears the station clock and a time: 6:15.','The station is just past the park path. I can see the platform lights.'],
+    ['The ticket is stamped with a tiny rooftop drawing. That has to be the final lead.','I found the stairwell to the rooftops. Let’s see who left the box there.']
+  ];
+  const pair=stories[scene]||stories[0];say('NARRATOR',pair[0],()=>say('ASMITA',pair[1],()=>toast('WALK TO THE GLOWING EXIT AND PRESS SPACE')));
+}
+
+function revealClue(id,o){
+  const labels={envelope:'A Mysterious Message',notebook:'The Library Notebook',photo:'The Park Photograph',ticket:'A Train Ticket',key:'The Safe’s Final Clue'};
+  show(`<div class="eyebrow">EVIDENCE FOUND</div><h2>${labels[id]||'A New Clue'}</h2><p>${o[3]}</p><p class="small">The detail has been copied into Asmita’s notebook.</p>`,[{label:id==='envelope'?'READ THE MESSAGE':'FILE THIS CLUE',fn:()=>{
+    hide();const clueId=id==='envelope'?'message':id;if(!state.clues.includes(clueId))state.clues.push(clueId);save();
+    if(id==='envelope'){say('MESSAGE','“Some people become a permanent part of your story. Follow the little things I left behind.”',advance);return}
+    toast('CLUE ADDED TO THE NOTEBOOK');say('ASMITA',id==='key'?'Inside the safe: a star drawn beside a cliff at sunset. The clues finally make sense.':'One more piece of the story. The trail leads onward.',()=>{if(allEvidence())finalPuzzle();else advance()});
+  }}]);
+}
+
+function obbyChallenge(complete){
+  let step=0,hearts=3,open=false,armed=null,expiry=null,again=null;const hazards=['ROOTS','LOG','PUDDLE','ROCK GAP','LOW BRANCH'];
+  const clear=()=>{clearTimeout(armed);clearTimeout(expiry);clearTimeout(again)};
+  const header=`<div class="case-file-head"><span class="case-kicker">FIELD CHALLENGE 03 / 06</span><span class="case-stamp">PARK RUN</span></div><h2>The Runaway Photograph</h2><p>Dash along the trail. Jump only when the obstacle reaches the painted marker.</p>`;
+  const status=msg=>{const e=document.querySelector('#obby-status');if(e)e.textContent=msg};
+  const success=()=>{clear();show(`${header}<div class="clue-reward"><span>✦</span><div><b>TRAIL CLEARED</b><small>Asmita catches the photograph before the wind takes it.</small></div></div>`,[{label:'RECOVER THE PHOTOGRAPH',fn:complete}])};
+  const miss=()=>{open=false;hearts--;const e=document.querySelector('#obby-hazard');if(e)e.classList.remove('rush');if(hearts<=0){step=0;hearts=3;status('A soft landing in the grass. Three fresh chances—try the course again.')}else status(`A little stumble, no harm done. ${hearts} chances left; retry this obstacle.`);again=setTimeout(arm,850)};
+  function arm(){if(step>=hazards.length){success();return}open=false;const ob=document.querySelector('#obby-hazard');if(ob){ob.textContent=hazards[step];ob.classList.remove('rush');void ob.offsetWidth;ob.classList.add('rush')}status(`Obstacle ${step+1} of ${hazards.length}: watch the marker…`);armed=setTimeout(()=>{open=true;status(`JUMP NOW — ${hazards[step]}!`);expiry=setTimeout(miss,1350)},1050)}
+  const jump=()=>{if(!open){status('Wait for the obstacle to reach the marker.');return}open=false;clearTimeout(expiry);step++;const meter=document.querySelector('#obby-meter'),runner=document.querySelector('#obby-runner');if(meter)meter.textContent=`${step} / ${hazards.length} jumps · ${'♥'.repeat(hearts)}${'♡'.repeat(3-hearts)}`;if(runner){runner.classList.remove('hop');void runner.offsetWidth;runner.classList.add('hop')}status('Perfect timing! Keep running.');again=setTimeout(arm,600)};
+  const close=()=>{clear();hide()};
+  show(`${header}<div class="obby-stage"><div class="obby-sky"><span class="obby-cloud cloud-a">☁</span><span class="obby-cloud cloud-b">☁</span><div class="obby-hill"></div></div><div class="obby-track"><span class="obby-runner" id="obby-runner">🏃🏻‍♀️</span><span class="obby-hazard" id="obby-hazard">ROOTS</span><i class="obby-marker"></i></div><div class="puzzle-meter" id="obby-meter">0 / ${hazards.length} jumps · ♥♥♥</div><div class="puzzle-note" id="obby-status">Ready? Watch the trail, then jump at the marker.</div></div>`,[{label:'JUMP',fn:jump},{label:'CLOSE CHALLENGE',secondary:true,fn:close}]);armed=setTimeout(arm,800);
+}
+
+function keeperDuel(complete){
+  const rounds=[{tell:'He feints high, then sweeps low.',call:'LOW SWEEP',answer:'JUMP'},{tell:'He rushes forward with his shoulder.',call:'SHOULDER RUSH',answer:'DODGE'},{tell:'He leaves his key hand unguarded.',call:'OPEN GUARD',answer:'DISARM'}];
+  let round=0,hearts=3;const header=`<div class="case-file-head"><span class="case-kicker">FIELD CHALLENGE 05 / 06</span><span class="case-stamp">FRIENDLY SPAR</span></div><h2>The Rooftop Keeper</h2>`;
+  const success=()=>show(`${header}<div class="clue-reward"><span>✦</span><div><b>THE KEEPER YIELDS THE KEY</b><small>He laughs, bows, and lets Asmita take the brass safe key.</small></div></div>`,[{label:'TAKE THE SAFE KEY',fn:complete}]);
+  const draw=msg=>{const r=rounds[round];show(`${header}<p>A playful rooftop spar—read his stance and answer each move. No one gets hurt.</p><div class="duel-arena"><div class="duel-card asmita-duel">${portraitMarkup('ASMITA')}<b>ASMITA</b></div><div class="duel-vs">VS</div><div class="duel-card keeper-duel">${portraitMarkup('KEEPER')}<b>ROOFTOP KEEPER</b></div></div><div class="duel-telegraph"><small>ROUND ${round+1} / ${rounds.length} · ${'♥'.repeat(hearts)}${'♡'.repeat(3-hearts)}</small><b>${r.call}</b><span>${msg||r.tell}</span></div><p class="small">${r.answer==='JUMP'?'Jump over it.':r.answer==='DODGE'?'Dodge to the side.':'Reach for the key when his guard opens.'}</p>`,[{label:'BLOCK',fn:()=>choose('BLOCK')},{label:'DODGE',secondary:true,fn:()=>choose('DODGE')},{label:'JUMP',secondary:true,fn:()=>choose('JUMP')},{label:'DISARM',secondary:true,fn:()=>choose('DISARM')},{label:'STEP OUT',secondary:true,fn:()=>hide()}])};
+  const choose=move=>{if(move===rounds[round].answer){round++;if(round>=rounds.length){success();return}draw('Nice move. He changes his stance…')}else{hearts--;if(hearts<=0){hearts=3;round=0;draw('He taps your shoulder—reset, and read the next move carefully.')}else draw(`Not quite. ${hearts} chances remain; try this move again.`)}};
+  draw();
+}
+
+function runChallenge(id,complete){if(id==='photo'){obbyChallenge(complete);return}if(id==='guard'){keeperDuel(complete);return}if(id==='safe'){minigame('key',complete);return}minigame(id,complete)}
+
+function investigate(id){
+  if(!id)return;if(id==='portal'){enterPortal();return}
+  if(id==='key'){
+    if(state.safeKey){say('ASMITA','The keeper has handed over the brass key. The old safe is just behind him.');return}
+    runChallenge('guard',()=>{state.safeKey=true;save();say('KEEPER','Clean moves, detective. The safe key is yours—just don’t scratch the brass. ',()=>say('ASMITA','Now, what was he guarding so carefully? The safe is beside the chimney.'))});return;
+  }
+  if(id==='safe'){
+    if(!state.safeKey){say('ASMITA','The safe is locked. I need to get the rooftop keeper’s key first.');return}
+    if(state.clues.includes('key')){say('ASMITA','The safe is empty now. I copied its clue into my notebook.');return}
+    runChallenge('safe',()=>revealClue('key',['key',832,401,'Inside the safe is a note showing the cave opening above the cliff, with a tiny star marking the sunset viewpoint.']));return;
+  }
+  if(id==='cave'){caveReveal();return}
+  const sc=scenes[Math.min(scene,5)],o=sc.objects.find(z=>z[0]===id);if(!o)return;
+  near=null;if(id==='lamp'){say('ASMITA','The lamp blinks in a measured rhythm. It is a signal, not a fault.');return}
+  const already=id==='envelope'?state.clues.includes('message'):state.clues.includes(id);if(already){say('ASMITA','I already recorded this evidence. The trail continues toward the glowing exit.');return}
+  runChallenge(id,()=>revealClue(id,o));
+}
+
+function walkToNextLead(){
+  if(transitionTo!==null||state.nextScene!==scene+1)return;near=null;transitionTo=state.nextScene;transitionStarted=performance.now();targetX=915;targetY=404;cinematic=true;zoomTarget=1.035;toast('ASM​​ITA FOLLOWS THE CLUE TRAIL…');
+}
+
+function move(dx,dy){if(transitionTo!==null)return;targetX=Math.max(45,Math.min(915,targetX+dx));targetY=Math.max(310,Math.min(432,targetY+dy));if(scene===5&&targetX>435){targetX=435;toast('A narrow path winds deeper into the cave…')}near=null;save()}
+function interact(){
+  if(!overlay.classList.contains('closed'))return;
+  if(!$('#dialogue').classList.contains('hidden')){next();return}
+  if(near==='exit'){walkToNextLead();return}
+  if(near){investigate(near);return}
+  const target=scenes[Math.min(scene,5)].objects[0];if(target&&Math.hypot(x-target[1],y-target[2])<115){investigate(target[0]);return}
+  if(scene===4&&Math.hypot(x-675,y-405)<105){investigate('key');return}
+  if(scene===4&&Math.hypot(x-832,y-401)<105){investigate('safe');return}
+  toast('Look for a glowing object or path marker nearby.');
+}
+
+// Direct taps on the keeper, safe, and trail gate are easy to use on phones.
+cvs.addEventListener('pointerdown',e=>{
+  const r=cvs.getBoundingClientRect(),px=(e.clientX-r.left)*960/r.width,py=(e.clientY-r.top)*540/r.height;
+  if(!$('#dialogue').classList.contains('hidden')){next();e.stopImmediatePropagation();return}
+  if(scene===4&&state.portalReady&&Math.hypot(px-831,py-380)<110){investigate('portal');e.stopImmediatePropagation();return}
+  if(scene===4&&px>620&&px<735&&py>310&&py<455){investigate('key');e.stopImmediatePropagation();return}
+  if(scene===4&&px>770&&px<892&&py>340&&py<465){investigate('safe');e.stopImmediatePropagation();return}
+  if(scene<4&&state.nextScene===scene+1&&px>850&&py>340){walkToNextLead();e.stopImmediatePropagation()}
+},true);
+
+function render(){
+  const now=performance.now();t+=.016;x+=(targetX-x)*.2;y+=(targetY-y)*.2;if(Math.abs(targetX-x)<.4)x=targetX;if(Math.abs(targetY-y)<.4)y=targetY;
+  if(turnStart&&now-turnStart>1250)abhayTurned=true;cameraZoom+=(zoomTarget-cameraZoom)*.035;
+  if(transitionTo!==null&&now-transitionStarted>1850){const nextScene=transitionTo;transitionTo=null;scene=nextScene;state.scene=scene;state.nextScene=null;x=targetX=95;y=targetY=404;near=null;cinematic=false;cameraZoom=1.04;zoomTarget=1;fade=.88;save();const sceneText={1:'The library doors ease open. Amber lamps glow between towering shelves, and the regulars look up from their books.',2:'The path spills into the park. Birds flutter above the bench, where the late sun turns every leaf gold.',3:'The station clock clicks to life. A train rolls past in a wash of warm light, leaving the platform quiet again.',4:'The stairwell opens onto the rooftops. The city stretches below, and someone is waiting beside a locked safe.'};say('NARRATOR',sceneText[scene]||'The clue trail leads onward.',()=>say('ASMITA',scene===1?'The library has to be the next stop. I’ll search the return cart.':scene===4?'There’s the keeper—and that safe. Let’s find out what he knows.':'I’m right on the trail.',()=>{}))}
+  if(endingPhase==='walk'&&now-walkProgress>4400){endingPhase='sit';sitTimer=now}if(endingPhase==='sit'&&now-sitTimer>3000&&!endingStarted){endingStarted=true;endingPhase='done';finalDialogue()}
+  ctx.clearRect(0,0,960,540);ctx.save();if(scene===6&&cameraZoom>1){ctx.translate(480,270);ctx.scale(cameraZoom,cameraZoom);ctx.translate(-480,-270)}
+  if(transitionTo!==null){const p=Math.min(1,(now-transitionStarted)/1850);ctx.translate(-p*125,0)}
+  base();if(scene<5)drawAsmita(x,y,1.35,Math.hypot(targetX-x,targetY-y)>1?t*7:0);if(scene<6)sceneObjects();if(scene<4)drawSceneExit();if(scene===4)drawRooftopProps();if(scene>=5&&scene<=7){drawAsmita(x,y,1.35,Math.hypot(targetX-x,targetY-y)>1?t*7:0);if(scene>=6)drawAbhay(731,407,2,turnStart&&!abhayTurned?'turning':abhayTurned?'turned':'silhouette')}
+  ctx.restore();if(transitionTo!==null){const p=Math.max(0,Math.min(.8,(now-transitionStarted)/1850-.45));if(p>0){ctx.fillStyle=`rgba(9,11,20,${p})`;ctx.fillRect(0,0,960,540)}}
+  if(cinematic||transitionTo!==null){ctx.fillStyle='#05050bd9';ctx.fillRect(0,0,960,32);ctx.fillRect(0,508,960,32);ctx.fillStyle='#e8c89055';ctx.fillRect(0,32,960,1);ctx.fillRect(0,507,960,1)}if(fade>0){ctx.fillStyle=`rgba(4,5,12,${Math.min(.75,fade)})`;ctx.fillRect(0,0,960,540);fade=Math.max(0,fade-.025)}requestAnimationFrame(render);
+}
+
+function drawAsmita(px,py,scale=1.25,walk=0,pose='detective'){
+  const s=scale,step=Math.sin(walk)*4.2,arm=Math.sin(walk+Math.PI)*3.2,breath=Math.sin(t*1.6)*.6,skin='#f4c9ad',hair='#30212c',ink='#34293a';
+  ctx.save();ctx.translate(px,py+breath);ctx.scale(s,s);ctx.fillStyle='#07091055';ctx.beginPath();ctx.ellipse(0,3,26,6,0,0,Math.PI*2);ctx.fill();
+  if(pose==='sit'){
+    limb2D([[-8,3],[-12,17],[-33,24]],'#41434f',9);limb2D([[8,3],[13,17],[35,24]],'#41434f',9);limb2D([[-33,24],[-44,24]],'#765547',6);limb2D([[35,24],[46,24]],'#765547',6);
+  }else{
+    limb2D([[-7,2],[-8+step*.5,19],[-10+step,35]],'#41434f',8.5);limb2D([[7,2],[8-step*.5,19],[10-step,35]],'#41434f',8.5);
+    limb2D([[-10+step,35],[-20+step,36]],'#755445',6.5);limb2D([[10-step,35],[20-step,36]],'#755445',6.5);
+  }
+  // A fitted coat with shaped shoulders, stitched seams and brass fasteners.
+  const coat=ctx.createLinearGradient(-20,-51,21,8);coat.addColorStop(0,'#c29473');coat.addColorStop(.5,'#a77b62');coat.addColorStop(1,'#805e51');
+  ctx.beginPath();ctx.moveTo(-14,-55);ctx.quadraticCurveTo(-22,-52,-20,-34);ctx.lineTo(-16,8);ctx.quadraticCurveTo(0,14,16,8);ctx.lineTo(20,-34);ctx.quadraticCurveTo(22,-52,14,-55);ctx.quadraticCurveTo(0,-62,-14,-55);ctx.closePath();ctx.fillStyle=coat;ctx.fill();ctx.strokeStyle='#674941';ctx.lineWidth=1.5;ctx.stroke();
+  rounded2D(-8,-53,16,42,4,'#6d8792','#536470');ctx.fillStyle='#ead9c0';ctx.beginPath();ctx.moveTo(-13,-54);ctx.lineTo(-4,-39);ctx.lineTo(0,-47);ctx.lineTo(5,-39);ctx.lineTo(13,-54);ctx.closePath();ctx.fill();
+  ctx.strokeStyle='#d7b48e';ctx.lineWidth=1.4;ctx.beginPath();ctx.moveTo(-12,-52);ctx.lineTo(-5,-31);ctx.moveTo(12,-52);ctx.lineTo(5,-31);ctx.stroke();
+  ctx.strokeStyle='#dfc69f';ctx.lineWidth=1;ctx.setLineDash([2,3]);ctx.beginPath();ctx.moveTo(-15,-28);ctx.lineTo(-14,4);ctx.moveTo(15,-28);ctx.lineTo(14,4);ctx.stroke();ctx.setLineDash([]);
+  limb2D([[-14,-50],[-22,-38],[-21+arm*.4,-26]],'#a77b62',8);limb2D([[14,-50],[22,-38],[20-arm,-28]],'#a77b62',8);
+  ctx.fillStyle=skin;ctx.beginPath();ctx.ellipse(-21+arm*.4,-25,4,4.8,0,0,Math.PI*2);ctx.ellipse(20-arm,-28,4,4.8,0,0,Math.PI*2);ctx.fill();
+  for(const [bx,by] of [[5,-31],[5,-17]]){ctx.fillStyle='#f2d18b';ctx.beginPath();ctx.arc(bx,by,1.7,0,Math.PI*2);ctx.fill()}
+  rounded2D(12,-29,12,16,2,'#ebd8b7','#97704f');ctx.strokeStyle='#ad8c67';ctx.lineWidth=.8;ctx.beginPath();ctx.moveTo(15,-25);ctx.lineTo(21,-25);ctx.moveTo(15,-21);ctx.lineTo(21,-21);ctx.stroke();
+  // Dark, softly waved hair frames her fair face, even in profile and wind.
+  const sway=Math.sin(t*1.7)*1.2;ctx.fillStyle=hair;ctx.beginPath();ctx.moveTo(-17,-86);ctx.quadraticCurveTo(-21,-109,-1,-112);ctx.quadraticCurveTo(19,-111,18,-86);ctx.lineTo(18,-57+sway);ctx.quadraticCurveTo(11,-52,8,-68);ctx.lineTo(-10,-68);ctx.quadraticCurveTo(-14,-52,-19,-59);ctx.closePath();ctx.fill();
+  ctx.strokeStyle='#654452';ctx.lineWidth=1.5;ctx.beginPath();ctx.moveTo(-13,-99);ctx.quadraticCurveTo(-5,-108,3,-103);ctx.moveTo(11,-100);ctx.quadraticCurveTo(18,-91,13,-78);ctx.stroke();
+  ctx.fillStyle=skin;ctx.beginPath();ctx.ellipse(0,-82,14.5,19,0,0,Math.PI*2);ctx.fill();ctx.fillStyle='#ec9c91';ctx.globalAlpha=.36;ctx.beginPath();ctx.ellipse(-9,-75,3.2,1.8,0,0,Math.PI*2);ctx.ellipse(9,-75,3.2,1.8,0,0,Math.PI*2);ctx.fill();ctx.globalAlpha=1;
+  ctx.strokeStyle='#563b43';ctx.lineWidth=1.4;ctx.beginPath();ctx.moveTo(-9,-88);ctx.quadraticCurveTo(-5,-91,-2,-88);ctx.moveTo(3,-88);ctx.quadraticCurveTo(7,-91,10,-88);ctx.stroke();
+  const blink=Math.sin(t*.63+1.1)>.995;if(blink){ctx.strokeStyle='#49353d';ctx.lineWidth=1.6;ctx.beginPath();ctx.moveTo(-8,-82);ctx.quadraticCurveTo(-5,-80,-2,-82);ctx.moveTo(3,-82);ctx.quadraticCurveTo(7,-80,10,-82);ctx.stroke()}else{ctx.fillStyle='#fffdf9';ctx.beginPath();ctx.ellipse(-5,-82,3.3,3.8,0,0,Math.PI*2);ctx.ellipse(6,-82,3.3,3.8,0,0,Math.PI*2);ctx.fill();ctx.fillStyle='#655066';ctx.beginPath();ctx.ellipse(-4.5,-82,1.8,2.8,0,0,Math.PI*2);ctx.ellipse(6.5,-82,1.8,2.8,0,0,Math.PI*2);ctx.fill();ctx.fillStyle='#fff';ctx.beginPath();ctx.arc(-4,-83,.8,0,Math.PI*2);ctx.arc(7,-83,.8,0,Math.PI*2);ctx.fill()}
+  ctx.fillStyle='#cd8f7b';ctx.beginPath();ctx.moveTo(0,-80);ctx.lineTo(-1,-74);ctx.quadraticCurveTo(1,-72,3,-74);ctx.fill();ctx.strokeStyle='#a25264';ctx.lineWidth=1.6;ctx.lineCap='round';ctx.beginPath();ctx.moveTo(-3,-68);ctx.quadraticCurveTo(0,-65,4,-68);ctx.stroke();
+  // Her signature glasses stay large and sharply outlined above the eyes.
+  ctx.fillStyle='#9eddea44';ctx.strokeStyle=ink;ctx.lineWidth=2.4;ctx.beginPath();ctx.roundRect(-12,-87,10,10,3);ctx.roundRect(2,-87,10,10,3);ctx.fill();ctx.stroke();ctx.beginPath();ctx.moveTo(-2,-83);ctx.lineTo(2,-83);ctx.moveTo(-12,-83);ctx.lineTo(-16,-85);ctx.moveTo(12,-83);ctx.lineTo(16,-85);ctx.stroke();
+  ctx.strokeStyle='#f3ffffbb';ctx.lineWidth=.8;ctx.beginPath();ctx.moveTo(-10,-85);ctx.lineTo(-7,-85);ctx.moveTo(4,-85);ctx.lineTo(7,-85);ctx.stroke();
+  // Structured fedora with a pinched crown and curved brim; no round knit-cap shape.
+  const hat=ctx.createLinearGradient(-24,-127,25,-98);hat.addColorStop(0,'#8a715d');hat.addColorStop(.5,'#675143');hat.addColorStop(1,'#493a39');ctx.fillStyle=hat;ctx.beginPath();ctx.moveTo(-29,-102);ctx.quadraticCurveTo(-20,-107,-13,-105);ctx.lineTo(-11,-120);ctx.quadraticCurveTo(-7,-127,0,-126);ctx.quadraticCurveTo(10,-126,14,-119);ctx.lineTo(16,-105);ctx.quadraticCurveTo(25,-107,30,-101);ctx.quadraticCurveTo(18,-96,0,-98);ctx.quadraticCurveTo(-18,-97,-29,-102);ctx.closePath();ctx.fill();ctx.strokeStyle='#3d3032';ctx.lineWidth=1.5;ctx.stroke();
+  ctx.strokeStyle='#c9a374';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(-15,-105);ctx.quadraticCurveTo(0,-102,16,-105);ctx.stroke();ctx.strokeStyle='#92745b';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(-7,-120);ctx.quadraticCurveTo(0,-115,8,-120);ctx.stroke();
+  rounded2D(14,-18,13,18,2,'#65484b','#d1aa77');ctx.strokeStyle='#e9d5a1';ctx.lineWidth=.8;ctx.beginPath();ctx.moveTo(17,-14);ctx.lineTo(24,-14);ctx.moveTo(17,-10);ctx.lineTo(23,-10);ctx.stroke();
+  // Handheld magnifier catches the light as she walks and investigates.
+  ctx.strokeStyle='#e7e3d8';ctx.lineWidth=2.7;ctx.beginPath();ctx.arc(-23,-44,8.5,0,Math.PI*2);ctx.stroke();ctx.fillStyle='#9fe3ef88';ctx.fill();ctx.strokeStyle='#fff';ctx.lineWidth=1;ctx.beginPath();ctx.arc(-25,-46,4,3.8,5.8);ctx.stroke();limb2D([[-18,-38],[-13,-30]],'#785544',3.4);
+  ctx.restore();
+}
+
+function drawAbhay(px,py,s=1.18,pose='silhouette'){
+  const q=pose==='turning'?Math.min(1,(performance.now()-turnStart)/1250):1,front=pose==='turned'||(pose==='turning'&&q>.5),back=pose==='silhouette'||(pose==='turning'&&!front),wind=Math.sin(t*1.3)*1.2;
+  ctx.save();ctx.translate(px,py);if(pose==='turning')ctx.scale(.12+Math.abs(Math.cos(q*Math.PI))*.88,1);ctx.scale(s,s);ctx.fillStyle='#07091166';ctx.beginPath();ctx.ellipse(0,3,25,6,0,0,Math.PI*2);ctx.fill();
+  if(pose==='sit'){
+    limb2D([[-8,-1],[-10,13],[-30,23]],'#11141d',11);limb2D([[8,-1],[12,13],[35,23]],'#11141d',11);limb2D([[-30,23],[-41,23]],'#171922',6);limb2D([[35,23],[46,23]],'#171922',6);
+    rounded2D(-17,-57,34,51,11,'#171a24','#3a3d48');ctx.fillStyle='#dba681';ctx.beginPath();ctx.ellipse(0,-84,13,17,0,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle='#29232a';ctx.beginPath();ctx.moveTo(-14,-88);ctx.quadraticCurveTo(-12,-108,0,-107);ctx.quadraticCurveTo(13,-107,15,-91);ctx.quadraticCurveTo(7,-98,1,-96);ctx.quadraticCurveTo(-7,-91,-14,-86);ctx.closePath();ctx.fill();
+    ctx.fillStyle='#332b34';ctx.beginPath();ctx.arc(-5,-83,1.6,0,Math.PI*2);ctx.arc(6,-83,1.6,0,Math.PI*2);ctx.fill();ctx.strokeStyle='#965d59';ctx.lineWidth=1.4;ctx.beginPath();ctx.moveTo(-3,-72);ctx.quadraticCurveTo(1,-69,5,-72);ctx.stroke();ctx.restore();return;
+  }
+  // Clean black trousers and a fitted charcoal-black jacket.
+  limb2D([[-8,0],[-9,18],[-10,40]],'#12151e',10);limb2D([[8,0],[9,18],[10,40]],'#12151e',10);limb2D([[-10,40],[-21,41]],'#090b11',7);limb2D([[10,40],[21,41]],'#090b11',7);
+  const j=ctx.createLinearGradient(-22,-58,21,-2);j.addColorStop(0,'#252833');j.addColorStop(.45,'#171a23');j.addColorStop(1,'#0d1018');ctx.beginPath();ctx.moveTo(-15,-63);ctx.quadraticCurveTo(-23,-59,-21,-37);ctx.lineTo(-17,-5);ctx.quadraticCurveTo(0,2,17,-5);ctx.lineTo(21,-37);ctx.quadraticCurveTo(23,-59,15,-63);ctx.quadraticCurveTo(0,-70,-15,-63);ctx.closePath();ctx.fillStyle=j;ctx.fill();ctx.strokeStyle='#3b404c';ctx.lineWidth=1.5;ctx.stroke();
+  if(!back){ctx.fillStyle='#252a34';ctx.beginPath();ctx.moveTo(-7,-62);ctx.lineTo(0,-49);ctx.lineTo(7,-62);ctx.lineTo(5,-7);ctx.lineTo(-5,-7);ctx.closePath();ctx.fill();ctx.strokeStyle='#a9875d';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(0,-47);ctx.lineTo(0,-17);ctx.stroke();ctx.fillStyle='#d8b57b';ctx.beginPath();ctx.arc(0,-42,1.7,0,Math.PI*2);ctx.fill();ctx.strokeStyle='#3c414d';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(-12,-52);ctx.lineTo(-8,-12);ctx.moveTo(12,-52);ctx.lineTo(8,-12);ctx.stroke()}
+  if(back){
+    ctx.strokeStyle='#414653';ctx.lineWidth=1.1;ctx.beginPath();ctx.moveTo(-12,-50);ctx.quadraticCurveTo(0,-45,12,-50);ctx.moveTo(-10,-15);ctx.lineTo(-5,-15);ctx.moveTo(5,-15);ctx.lineTo(10,-15);ctx.stroke();
+    limb2D([[-14,-57],[-22,-40],[-18,-24]],'#191c25',8.5);limb2D([[14,-57],[22,-40],[18,-24]],'#191c25',8.5);
+    ctx.strokeStyle='#090c12';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(-20,-29);ctx.quadraticCurveTo(-14,-24,-8,-30);ctx.moveTo(20,-29);ctx.quadraticCurveTo(14,-24,8,-30);ctx.stroke();
+  }else{
+    const armSwing=Math.sin(t*4)*2.5;limb2D([[-14,-57],[-22,-38],[-22+armSwing,-20]],'#191c25',8.5);limb2D([[14,-57],[22,-38],[22-armSwing,-20]],'#191c25',8.5);ctx.fillStyle='#dba681';ctx.beginPath();ctx.ellipse(-22+armSwing,-19,4,5,0,0,Math.PI*2);ctx.ellipse(22-armSwing,-19,4,5,0,0,Math.PI*2);ctx.fill();
+  }
+  // His head is uncovered: neatly swept hair, a defined jaw and a relaxed smile.
+  if(back){ctx.fillStyle='#2b252d';ctx.beginPath();ctx.moveTo(-15,-82);ctx.quadraticCurveTo(-20,-104,-5,-109);ctx.quadraticCurveTo(1,-114,9,-107);ctx.quadraticCurveTo(19,-104,16,-86);ctx.lineTo(13,-72);ctx.quadraticCurveTo(0,-65,-13,-73);ctx.closePath();ctx.fill();ctx.strokeStyle='#edb56e99';ctx.lineWidth=1.2;ctx.beginPath();ctx.moveTo(-15,-82);ctx.quadraticCurveTo(-19,-103,-5,-109);ctx.moveTo(14,-83);ctx.quadraticCurveTo(19,-102,9,-107);ctx.stroke()}
+  else{
+    ctx.fillStyle='#dba681';ctx.beginPath();ctx.moveTo(-13,-85);ctx.quadraticCurveTo(-13,-102,0,-102);ctx.quadraticCurveTo(14,-102,14,-85);ctx.lineTo(10,-70);ctx.quadraticCurveTo(0,-62,-10,-70);ctx.closePath();ctx.fill();
+    ctx.fillStyle='#2b252d';ctx.beginPath();ctx.moveTo(-15,-88);ctx.quadraticCurveTo(-14,-109,-1,-110);ctx.quadraticCurveTo(13,-111,17,-94);ctx.quadraticCurveTo(8,-100,2,-98);ctx.quadraticCurveTo(-5,-94,-14,-86);ctx.closePath();ctx.fill();ctx.strokeStyle='#51404b';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(-9,-101);ctx.quadraticCurveTo(-2,-108,4,-104);ctx.moveTo(7,-101);ctx.lineTo(12,-96);ctx.stroke();
+    ctx.strokeStyle='#392a30';ctx.lineWidth=1.7;ctx.beginPath();ctx.moveTo(-9,-87);ctx.quadraticCurveTo(-5,-90,-2,-87);ctx.moveTo(3,-87);ctx.quadraticCurveTo(7,-90,10,-87);ctx.stroke();ctx.fillStyle='#fffdf9';ctx.beginPath();ctx.ellipse(-5,-82,3,3.2,0,0,Math.PI*2);ctx.ellipse(6,-82,3,3.2,0,0,Math.PI*2);ctx.fill();ctx.fillStyle='#393340';ctx.beginPath();ctx.arc(-4,-82,1.6,0,Math.PI*2);ctx.arc(7,-82,1.6,0,Math.PI*2);ctx.fill();ctx.fillStyle='#fff';ctx.beginPath();ctx.arc(-3.5,-83,.7,0,Math.PI*2);ctx.arc(7.5,-83,.7,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle='#c88f79';ctx.beginPath();ctx.moveTo(0,-81);ctx.lineTo(-1,-74);ctx.quadraticCurveTo(1,-72,3,-74);ctx.fill();ctx.strokeStyle='#915755';ctx.lineWidth=1.7;ctx.lineCap='round';ctx.beginPath();ctx.moveTo(-4,-69);ctx.quadraticCurveTo(1,-66,5,-69);ctx.stroke();ctx.fillStyle='#efb59444';ctx.beginPath();ctx.ellipse(-9,-76,3,1.4,0,0,Math.PI*2);ctx.ellipse(10,-76,3,1.4,0,0,Math.PI*2);ctx.fill();
+  }
+  // Soft golden edge-light picks him out against the sunset, with no cap or hat.
+  ctx.strokeStyle='#f5c27b99';ctx.lineWidth=1.15;ctx.beginPath();ctx.moveTo(-15,-63);ctx.quadraticCurveTo(-23,-59,-21,-37);ctx.moveTo(15,-63);ctx.quadraticCurveTo(23,-59,21,-37);ctx.stroke();ctx.restore();
+}
+
+function portraitMarkup(who){
+  if(/KEEPER/i.test(who))return '<svg viewBox="0 0 100 110" role="img" aria-label="The rooftop keeper"><defs><linearGradient id="keeperBg" x2="0" y2="1"><stop stop-color="#33364d"/><stop offset="1" stop-color="#171b29"/></linearGradient></defs><rect width="100" height="110" rx="12" fill="url(#keeperBg)"/><path d="M12 110V91Q15 71 39 68H61Q85 71 88 91V110Z" fill="#554357" stroke="#282a39" stroke-width="2"/><path d="M37 70L50 87L63 70V110H37Z" fill="#b88364"/><ellipse cx="50" cy="43" rx="18" ry="22" fill="#e3af8c"/><path d="M32 38Q31 13 50 12Q70 12 68 39Q58 28 48 31Q39 33 32 40Z" fill="#342930"/><path d="M39 43Q44 40 47 43M53 43Q57 40 61 43" stroke="#48343a" stroke-width="2" fill="none"/><circle cx="43" cy="47" r="2" fill="#292632"/><circle cx="57" cy="47" r="2" fill="#292632"/><path d="M45 58Q50 61 55 58" stroke="#965b5c" stroke-width="2" fill="none" stroke-linecap="round"/><circle cx="75" cy="91" r="7" fill="none" stroke="#e0c27c" stroke-width="3"/></svg>';
+  if(/ABHAY/i.test(who))return '<svg viewBox="0 0 100 110" role="img" aria-label="Abhay, with neatly swept hair and a black jacket"><defs><linearGradient id="abhayBg" x2="0" y2="1"><stop stop-color="#5c5571"/><stop offset=".55" stop-color="#302b3c"/><stop offset="1" stop-color="#151923"/></linearGradient><linearGradient id="abhayCoat" x2="1"><stop stop-color="#282b36"/><stop offset="1" stop-color="#10131a"/></linearGradient></defs><rect width="100" height="110" rx="12" fill="url(#abhayBg)"/><circle cx="80" cy="21" r="16" fill="#ffc987" opacity=".16"/><path d="M10 110V88Q15 69 38 66H62Q85 69 90 88V110Z" fill="url(#abhayCoat)" stroke="#4a4b59" stroke-width="2"/><path d="M38 67L50 82L62 67L57 110H43Z" fill="#282b35"/><path d="M31 34Q30 11 50 10Q72 11 70 40L66 61Q59 72 50 72Q40 71 34 61Z" fill="#30272e"/><path d="M33 34Q32 13 49 11Q68 10 71 31Q61 25 52 27Q41 27 33 37Z" fill="#29232c"/><path d="M37 42Q42 39 46 42M54 42Q59 39 63 42" stroke="#49333a" stroke-width="2.3" fill="none" stroke-linecap="round"/><ellipse cx="42" cy="47" rx="3.6" ry="4" fill="#fffdf8"/><ellipse cx="58" cy="47" rx="3.6" ry="4" fill="#fffdf8"/><circle cx="43" cy="47" r="2" fill="#38313b"/><circle cx="59" cy="47" r="2" fill="#38313b"/><circle cx="43.6" cy="46.2" r=".8" fill="#fff"/><circle cx="59.6" cy="46.2" r=".8" fill="#fff"/><path d="M50 47L48 55Q50 57 53 55" fill="none" stroke="#ba826f" stroke-width="1.5"/><path d="M44 61Q50 65 57 61" fill="none" stroke="#94585a" stroke-width="2.2" stroke-linecap="round"/><path d="M37 89L50 101L63 89" fill="none" stroke="#646979" stroke-width="2"/><circle cx="76" cy="88" r="3" fill="#d5b476"/></svg>';
+  if(/NARRATOR|MESSAGE/i.test(who))return '<svg viewBox="0 0 100 110" role="img" aria-label="A clue"><defs><radialGradient id="clueBg"><stop stop-color="#685573"/><stop offset="1" stop-color="#171b2a"/></radialGradient></defs><rect width="100" height="110" rx="12" fill="url(#clueBg)"/><circle cx="50" cy="51" r="31" fill="#f3c479" opacity=".18"/><path d="M50 20L56 42L79 50L56 58L50 81L43 58L21 50L43 42Z" fill="#f2d494"/><circle cx="50" cy="51" r="8" fill="#fff5d7"/><circle cx="24" cy="25" r="2" fill="#f3d996"/><circle cx="77" cy="35" r="2" fill="#f3d996"/></svg>';
+  if(/LIBRARIAN/i.test(who))return '<svg viewBox="0 0 100 110" role="img" aria-label="The librarian"><rect width="100" height="110" rx="12" fill="#263241"/><path d="M14 110V89Q18 70 40 68H60Q82 70 86 89V110Z" fill="#627969"/><ellipse cx="50" cy="44" rx="17" ry="21" fill="#edc49e"/><path d="M32 40Q31 14 50 12Q69 13 68 42Q58 29 38 36Z" fill="#493a3b"/><circle cx="44" cy="46" r="2" fill="#382e35"/><circle cx="56" cy="46" r="2" fill="#382e35"/><path d="M46 58Q50 61 54 58" fill="none" stroke="#9b5f60" stroke-width="2"/><path d="M21 19H79V29H21Z" fill="#704e42"/><path d="M23 91H47V102H23ZM51 91H77V102H51Z" fill="#e7d5b2" stroke="#967b61" stroke-width="2"/></svg>';
+  return '<svg viewBox="0 0 100 110" role="img" aria-label="Asmita, the detective"><defs><linearGradient id="asmitaBg" x2="0" y2="1"><stop stop-color="#44405a"/><stop offset="1" stop-color="#1b1d2b"/></linearGradient><linearGradient id="asmitaCoat" x2="1"><stop stop-color="#c29370"/><stop offset="1" stop-color="#86624f"/></linearGradient></defs><rect width="100" height="110" rx="12" fill="url(#asmitaBg)"/><path d="M9 110V91Q13 71 37 68H63Q87 71 91 91V110Z" fill="url(#asmitaCoat)" stroke="#614a43" stroke-width="2"/><path d="M38 69L50 87L62 69V110H38Z" fill="#718995"/><path d="M21 49Q18 12 50 12Q82 12 79 49L74 70Q67 80 64 68L66 46H34Q31 64 24 70Z" fill="#30212c"/><ellipse cx="50" cy="44" rx="18" ry="22" fill="#f4c9ad"/><path d="M32 36Q29 12 50 11Q72 11 70 37Q60 28 49 30Q39 29 32 37Z" fill="#30212c"/><ellipse cx="41" cy="47" rx="4" ry="4.4" fill="#fffdf8"/><ellipse cx="59" cy="47" rx="4" ry="4.4" fill="#fffdf8"/><circle cx="42" cy="47" r="2.2" fill="#50415c"/><circle cx="60" cy="47" r="2.2" fill="#50415c"/><path d="M35 44Q41 40 46 43M54 43Q59 40 65 44" stroke="#47333b" stroke-width="2.5" fill="none" stroke-linecap="round"/><rect x="31" y="41" width="18" height="14" rx="5" fill="#9eddea44" stroke="#34293a" stroke-width="3"/><rect x="51" y="41" width="18" height="14" rx="5" fill="#9eddea44" stroke="#34293a" stroke-width="3"/><path d="M49 46H51M30 45L25 43M69 45L74 43" stroke="#34293a" stroke-width="3" stroke-linecap="round"/><path d="M46 62Q50 65 55 61" fill="none" stroke="#a25264" stroke-width="2" stroke-linecap="round"/><path d="M16 31Q24 24 48 25Q72 24 84 31Q70 37 50 36Q30 37 16 31Z" fill="#6b5347" stroke="#3e3033" stroke-width="2.5"/><path d="M32 23Q35 9 50 9Q65 9 68 23L66 27H34Z" fill="#755b49" stroke="#44353a" stroke-width="2"/><path d="M34 25Q50 28 67 25" stroke="#c6a174" stroke-width="2"/><circle cx="82" cy="80" r="9" fill="#91d9e766" stroke="#e5e0d3" stroke-width="3"/><path d="M88 87L95 98" stroke="#785744" stroke-width="4" stroke-linecap="round"/><path d="M15 17L18 21L23 22L18 24L15 29L13 24L9 22L13 21Z" fill="#f4d48d"/></svg>';
+}
+
+function say(who,text,done){
+  cinematic=true;$('#speaker').textContent=who;$('#line').textContent=text;const portrait=$('#portrait'),dialogue=$('#dialogue');if(portrait)portrait.innerHTML=portraitMarkup(who);
+  dialogue.classList.remove('speaker-asmita','speaker-abhay','speaker-librarian','speaker-narrator','speaker-keeper');
+  if(/ABHAY/i.test(who))dialogue.classList.add('speaker-abhay');else if(/KEEPER/i.test(who))dialogue.classList.add('speaker-keeper');else if(/LIBRARIAN/i.test(who))dialogue.classList.add('speaker-librarian');else if(/NARRATOR|MESSAGE/i.test(who))dialogue.classList.add('speaker-narrator');else dialogue.classList.add('speaker-asmita');
+  if(scene===6)zoomTarget=/ABHAY/i.test(who)?1.13:1.06;dialogue.classList.remove('hidden');dialogues=[done||(()=>{dialogue.classList.add('hidden');cinematic=false})];
+}
+
 document.addEventListener('keydown',e=>{if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight',' '].includes(e.key))e.preventDefault();if(e.key==='Escape'){if(overlay.classList.contains('closed'))menu();else hide();return}if(e.key===' '||e.key==='Enter'){interact();return}const d={ArrowUp:[0,-10],w:[0,-10],ArrowDown:[0,10],s:[0,10],ArrowLeft:[-10,0],a:[-10,0],ArrowRight:[10,0],d:[10,0]}[e.key];if(d&&overlay.classList.contains('closed')&&$('#dialogue').classList.contains('hidden'))move(...d);keys[e.key]=true});document.addEventListener('keyup',e=>keys[e.key]=false);
 cvs.addEventListener('pointerdown',e=>{const r=cvs.getBoundingClientRect(),px=(e.clientX-r.left)*960/r.width,py=(e.clientY-r.top)*540/r.height;if(!$('#dialogue').classList.contains('hidden')){next();return}if(scene===4&&state.portalReady&&Math.hypot(px-831,py-380)<105){investigate('portal');return}let sc=scenes[Math.min(scene,5)];let o=sc.objects.slice().reverse().find(q=>Math.abs(q[1]-px)<45&&Math.abs(q[2]-py)<45);if(o)investigate(o[0]);else if(overlay.classList.contains('closed')){targetX=px;targetY=Math.min(432,Math.max(310,py));near=null}});document.querySelectorAll('[data-dir]').forEach(b=>{const dir=b.dataset.dir,map={up:[0,-14],down:[0,14],left:[-14,0],right:[14,0]};for(const ev of ['pointerdown'])b.addEventListener(ev,e=>{e.preventDefault();if(overlay.classList.contains('closed'))move(...map[dir])})});$('#touchInteract').addEventListener('pointerdown',e=>{e.preventDefault();interact()});$('#notebookBtn').onclick=notebook;$('#inventoryBtn').onclick=inventory;function menu(){show(`<div class="eyebrow">PAUSE MENU</div><h2>The case can wait.</h2><p>Your progress is saved on this device. Continue where you left off, restart, or open your notes.</p>`,[{label:'CONTINUE',fn:hide},{label:'NOTEBOOK',secondary:true,fn:notebook},{label:'RESTART',secondary:true,fn:()=>show(`<div class="eyebrow">RESTART CASE?</div><h2>Begin again?</h2><p>Your current clues and letter will be cleared.</p>`,[{label:'YES, RESTART',fn:startNewCase},{label:'KEEP PLAYING',secondary:true,fn:hide}])}])}$('#pauseBtn').onclick=menu;
 function startCaveAmbience(){if(!music)$('#musicBtn').click();if(windSource)return;try{audio=audio||new(window.AudioContext||window.webkitAudioContext)();const buffer=audio.createBuffer(1,audio.sampleRate*3,audio.sampleRate),data=buffer.getChannelData(0);for(let i=0;i<data.length;i++)data[i]=(Math.random()*2-1)*.22;const source=audio.createBufferSource(),filter=audio.createBiquadFilter(),gain=audio.createGain();source.buffer=buffer;source.loop=true;filter.type='lowpass';filter.frequency.value=360;gain.gain.value=.012;source.connect(filter);filter.connect(gain);gain.connect(audio.destination);source.start();windSource=source}catch{}}function beep(f=520,d=.08){if(!sound)return;try{audio=audio||new(window.AudioContext||window.webkitAudioContext)();const o=audio.createOscillator(),g=audio.createGain();o.frequency.value=f;o.type='square';g.gain.value=.025;o.connect(g);g.connect(audio.destination);o.start();g.gain.exponentialRampToValueAtTime(.0001,audio.currentTime+d);o.stop(audio.currentTime+d)}catch{}}

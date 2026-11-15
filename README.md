@@ -19,7 +19,7 @@ A hosted first visit needs an internet connection so the browser can download th
 - Escape or Menu opens continue, notes, and restart options.
 - Music and sound can be toggled in the top bar.
 
-Progress saves in local storage on the current device and browser. The layout supports portrait and landscape screens, with touch-friendly controls and smooth 2D illustrations.
+Progress saves in local storage on the current device and browser. The title screen offers a clear **Continue Investigation** option whenever a case is saved; starting a new case asks before replacing that save. The layout supports portrait and landscape screens, with touch-friendly controls and smooth 2D illustrations.
 
 ## The adventure
 
